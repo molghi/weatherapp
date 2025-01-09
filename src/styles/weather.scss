@@ -1,0 +1,162 @@
+@use './initial';
+
+.section {
+    height: 100%;
+}
+
+.container {}
+
+
+// ================================================================================================
+
+
+
+.weather {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    padding-top: 1px;  /* to avoid vertical margin collapse */
+    margin-top: -10px;
+
+    &__top {
+        display: flex;
+        align-items: center;
+        column-gap: 40px;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        text-align: center;
+        justify-content: center;
+    }
+
+    &__temp {
+        font-size: 80px;
+        font-weight: bold;
+    }
+
+    &__icon {
+        width: 130px;
+        height: 130px;
+    }
+
+    &__description {
+        flex: 1 1 100%;
+        font-size: 25px;
+    }
+
+    &__medium {
+        margin-bottom: 30px;
+    }
+
+    &__line {
+        font-size: 20px;
+        margin-bottom: 10px;
+        text-align: center;
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    &__location {
+        font-size: 25px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    &__line-title {
+        opacity: 0.5;
+    }
+
+    &__place {}
+
+    &__coords {
+        opacity: 0.5;
+    }
+
+    &__wind {}
+
+    &__wind-speed {}
+
+    &__wind-direction {}
+
+    &__precipitation {}
+
+    &__precipitation-details {}
+
+    &__uv {}
+
+    &__hourly {
+        margin-bottom: 30px;
+    }
+
+    &__small-title {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    &__hours {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        column-gap: 20px;
+    }
+
+    &__hour {}
+
+    &__hour-time {}
+
+    &__hour-temp {}
+
+    &__hour-description {}
+
+    &__hour-precipitation {}
+
+    &__daily {
+        margin-bottom: 50px;
+    }
+
+    &__days {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        column-gap: 20px;
+    }
+
+    &__day {}
+
+    &__day-name {}
+
+    &__day-temp {}
+
+    &__day-description {}
+
+    &__day-uv {}
+
+    &__day-sunset {}
+
+    &__day-precipitation {}
+
+    &__updated {
+        opacity: 0.3;
+        font-size: 14px;
+    }
+
+    &__country {
+        position: relative;
+    }
+    &__flag {
+        position: absolute;
+        top: -19px;
+        right: -20px;
+        font-size: 22px;
+    }
+}
+
+
+// =======================================================================================================
+
+
+.change-location-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}

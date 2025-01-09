@@ -2,34 +2,39 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-// if you run server with 'dist' non-existent, it'll still run, it runs from memory -- it's not running it directly from dist files
-
 module.exports = {
-    mode: 'development',   // this makes the output more verbose, 'production' is more concise
+    mode: 'development',  
     entry: {
-        bundle: path.resolve(__dirname, 'src/js/Controller.js')  // __dirname is a variable that points to the root folder here that contains the src folder
+        bundle: path.resolve(__dirname, 'src/js/Controller.js')  
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: '[name].[contenthash].js',  // 'name' here references 'bundle' in 'entry' above; 'contenthash' is a little help to prevent browser hashing, it's new every time we build
-        clean: true, // keep only one js file in 'dist'
-        assetModuleFilename: '[name][ext]'   // to keep the names of images, otherwise they'll be renamed; if you have any imgs in src/images, they will be put into 'dist'
+        filename: '[name].[contenthash].js',  
+        clean: true, 
+        assetModuleFilename: '[name][ext]'
     },
-    devtool: 'source-map',    // also generates .js.map in dist, helps in debugging
+    devtool: 'source-map',    
     devServer: {
-        static: { // telling dev server what to serve
+        static: { 
             directory: path.resolve(__dirname, 'dist')
         },
         port: 3000,
-        open: true,  // opens the browser automatically
-        hot: true, // hot reloading
-        compress: true, // enable gzop compression
+        open: true,  
+        hot: true, 
+        compress: true, 
         historyApiFallback: true
     },
-    module: {  // for loaders
+    module: {  
         rules: [
             {
-                test: /\.scss$/,   // apply to every .scss
+                test: /\.(mp4|webm|ogg|mov)$/,  // Adjust extensions as needed
+                type: 'asset/resource',
+                generator: {
+                    filename: 'videos/[name].[hash][ext]', // Path within dist
+                },
+            },
+            {
+                test: /\.scss$/,  
                 use: ['style-loader', 'css-loader', 'sass-loader']
             }, 
             {
@@ -43,16 +48,21 @@ module.exports = {
                 }
             },
             {
+                test: /\.ico$/i,
+                type: 'asset/resource'
+            },
+            {
                 test: /\.(png|svg|jpg|jpeg|gif)$/i,
                 type: 'asset/resource'
             }
         ]
     },
-    plugins: [  // for plugins
+    plugins: [  
         new HtmlWebpackPlugin({
-            title: 'New Project',
+            title: 'Weather Control',
             filename: 'index.html',
-            template: 'src/template.html'
+            template: 'src/template.html',
+            favicon: './src/img/favicon.ico'
         }),
         // new BundleAnalyzerPlugin()
     ]

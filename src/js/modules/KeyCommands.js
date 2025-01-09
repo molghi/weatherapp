@@ -2,7 +2,7 @@
 
 class KeyCommands {
     constructor() {
-        console.log(`Hello from the KeyCommands module!`)
+        // console.log(`Hello from the KeyCommands module!`)
         this.listen()
     }
 

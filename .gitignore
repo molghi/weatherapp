@@ -36,3 +36,5 @@ build/
 
 # Test coverage reports
 coverage/
+
+config.js

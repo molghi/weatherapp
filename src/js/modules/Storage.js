@@ -1,7 +1,7 @@
 // to work with local storage
 class LS {
     constructor() {
-        console.log(`Hello from the LS (localStorage) module!`)
+        // console.log(`Hello from the LS (localStorage) module!`)
         // this.save('name', 'John')
         // this.save('hobbies', JSON.stringify(['cooking', 'running', 'sleeping']))
         // this.get('name')
