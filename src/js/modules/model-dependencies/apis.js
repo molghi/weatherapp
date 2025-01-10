@@ -1,3 +1,4 @@
+import { API_KEY } from '../config.js'
 
 async function fetchWeather(coordsArr) {
     try {
@@ -25,7 +26,7 @@ async function fetchWeather(coordsArr) {
             fetchedAt: {
                 fullTime: new Date(),
                 hoursMinutes: `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`,
-                date: `${new Date().getDate().toString().padStart(2,0)}.${(new Date().getMonth()+1).toString().padStart(2,0)}.${new Date().getFullYear()}`
+                date: `${new Date().getDate().toString().padStart(2,0)}/${(new Date().getMonth()+1).toString().padStart(2,0)}/${new Date().getFullYear()}`
             }
         }
         return myObj
@@ -41,7 +42,6 @@ async function fetchWeather(coordsArr) {
 async function fetchTimezone(coordsArr) {
     try {
         const [lat, lng] = coordsArr
-        const API_KEY = `` 
         const API_URL = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${API_KEY}`
         const response = await fetch(API_URL)
         if(!response.ok) throw new Error('>> Failed to fetch the timezone')

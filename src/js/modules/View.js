@@ -1,13 +1,16 @@
-import videoNightClearSky from '../../vid/night_clear_sky.mp4';
+import videoNightClearSky from '../../vid/night-clear-sky.mp4';
+import videoDayClearSky from '../../vid/day-clear-sky.mp4';
+import videoEveningSky from '../../vid/evening-sky.mp4';
+import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon } from './view-dependencies/icons.js'
 
 class View {
     constructor() {
-        // console.log(`hello from View`)
         this.locationEl = document.querySelector('.weather__place')
         this.coordsEl = document.querySelector('.weather__coords')
         this.timeEl = document.querySelector('.time-element')
         this.sunsetEl = document.querySelector('.sunset-time')
-        this.airTempEl = document.querySelector('.weather__temp')
+        this.airTempEl = document.querySelector('.weather__temp-main')
+        this.feelsLikeEl = document.querySelector('.weather__temp-feels')
         this.weatherDescriptionEl = document.querySelector('.weather__description')
         this.windSpeedEl = document.querySelector('.weather__wind-speed')
         this.windDirectionEl = document.querySelector('.weather__wind-direction')
@@ -16,8 +19,18 @@ class View {
         this.timeboxIconEl = document.querySelector('.time-icon')
         this.updatedAtEl = document.querySelector('.weather__updated-time')
         this.videoEl = document.querySelector('video')
+        this.bigIconEl = document.querySelector('.weather__icon')
+        this.precipitationEl = document.querySelector('.weather__precipitation-details')
+        this.hourlyBoxEl = document.querySelector('.weather__hours')
+        this.dailyBoxEl = document.querySelector('.weather__days')
+        this.celsiusSign = "°C"
+        this.fahrenheitSign = "°F"
+        this.latitudeSign = `° N`
+        this.longitudeSign = `° E`
         this.showBackgroundVideo()
     }
+
+    // ================================================================================================
 
     renderLocationAndCoords(obj) {
         const {city, continent, country, flag, coords} = obj
@@ -25,70 +38,205 @@ class View {
         this.coordsEl.innerHTML = `(${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`
     }
 
+    // ================================================================================================
+
     renderTimeElement(timeArr) {
-        const [hours, minutes] = timeArr
+        let [hours, minutes] = timeArr
+        if(hours===24) hours = 0
         this.timeEl.innerHTML = `${hours}<span>:</span>${minutes.toString().padStart(2,0)}`
     }
 
+    // ================================================================================================
+
     renderSunrise(time) {
-        const word = time > 15 ? 'minutes' : 'hours'
-        this.sunsetEl.innerHTML = `in ${time} ${word}`
-        this.sunsetEl.setAttribute('title', 'Nautical sunrise')
+        const [hours, minutes] = time
+        if(hours > 1) this.sunsetEl.innerHTML = `in ${hours} hours`
+        else if(hours === 1) this.sunsetEl.innerHTML = `in ${hours} hour`
+        else if(hours === 0 && minutes === 1) this.sunsetEl.innerHTML = `in ${minutes} minute`
+        else this.sunsetEl.innerHTML = `in ${minutes} minutes`
+
+        // const word = time > 15 ? 'minutes' : 'hours'
+        // this.sunsetEl.innerHTML = `in ${time} ${word}`
+        // this.sunsetEl.setAttribute('title', 'Nautical sunrise')
     }
+
+    // ================================================================================================
 
     renderTempAndDesc(temp, desc) {
         this.airTempEl.innerHTML = `${Math.floor(temp)}°C`
         this.weatherDescriptionEl.innerHTML = `${desc}`
     }
 
+    // ================================================================================================
+
     renderWind(windspeed, winddir) {
         this.windSpeedEl.innerHTML = `${windspeed} km/h,`
         this.windDirectionEl.innerHTML = `${winddir}`
     }
 
+    // ================================================================================================
+
     renderUvIndex(index) {
         this.uvIndexEl.innerHTML = index
     }
 
-    renderDayTimeAndIcon(time) {
+    // ================================================================================================
+
+    renderTimeIcon(time) {
         const [hrs, min] = time
-        let daytime, icon
-        if(hrs >= 0 && hrs < 7) {
-            daytime = 'Night'
-            icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z"/></svg>`
+        let icon = ''
+        if((hrs >= 0 && hrs < 7) || hrs === 24) {
+            icon = nightIcon
         }
         if(hrs >= 7 && hrs < 12) {
-            daytime = 'Morning'
-            icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="sun-horizon">
-                    <rect width="256" height="256" fill="none"></rect>
-                    <path d="M77.74854,43.58691a8.00009,8.00009,0,0,1,14.78222-6.123l7.65332,18.47754a8.00009,8.00009,0,1,1-14.78222,6.123ZM21.46387,108.53027l18.47754,7.65332a7.99964,7.99964,0,1,0,6.123-14.78125L27.58691,93.749a7.99964,7.99964,0,1,0-6.123,14.78125ZM213,116.79492a7.97082,7.97082,0,0,0,3.05859-.61133l18.47754-7.65332a7.99964,7.99964,0,1,0-6.123-14.78125l-18.47754,7.65332A8.001,8.001,0,0,0,213,116.79492ZM160.14551,66.39355a7.99266,7.99266,0,0,0,10.45263-4.3291l7.65332-18.47754a8.00009,8.00009,0,0,0-14.78222-6.123l-7.65332,18.47754A7.99929,7.99929,0,0,0,160.14551,66.39355ZM240,152H195.52319a68,68,0,1,0-135.04638,0H16a8,8,0,0,0,0,16H185.81812l.02905.00195L185.87085,168H240a8,8,0,0,0,0-16Zm-32,40H48a8,8,0,0,0,0,16H208a8,8,0,0,0,0-16Z"></path>
-                    </svg>`
+            icon = morningIcon
         }
         if(hrs >= 12 && hrs < 18) {
-            daytime = 'Day'
-            icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z"/></svg>`
+            icon = dayIcon
         }
-        if(hrs >= 18 && hrs < 23) {
-            daytime = 'Evening'
-            icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="sun-horizon">
-                    <rect width="256" height="256" fill="none"></rect>
-                    <path d="M77.74854,43.58691a8.00009,8.00009,0,0,1,14.78222-6.123l7.65332,18.47754a8.00009,8.00009,0,1,1-14.78222,6.123ZM21.46387,108.53027l18.47754,7.65332a7.99964,7.99964,0,1,0,6.123-14.78125L27.58691,93.749a7.99964,7.99964,0,1,0-6.123,14.78125ZM213,116.79492a7.97082,7.97082,0,0,0,3.05859-.61133l18.47754-7.65332a7.99964,7.99964,0,1,0-6.123-14.78125l-18.47754,7.65332A8.001,8.001,0,0,0,213,116.79492ZM160.14551,66.39355a7.99266,7.99266,0,0,0,10.45263-4.3291l7.65332-18.47754a8.00009,8.00009,0,0,0-14.78222-6.123l-7.65332,18.47754A7.99929,7.99929,0,0,0,160.14551,66.39355ZM240,152H195.52319a68,68,0,1,0-135.04638,0H16a8,8,0,0,0,0,16H185.81812l.02905.00195L185.87085,168H240a8,8,0,0,0,0-16Zm-32,40H48a8,8,0,0,0,0,16H208a8,8,0,0,0,0-16Z"></path>
-                    </svg>`
+        if(hrs >= 18 && hrs <= 23) {
+            icon = eveningIcon
         }
         
-        this.timeOfTheDayEl.textContent = daytime
         this.timeboxIconEl.innerHTML = icon
     }
+
+    // ================================================================================================
+
+    renderDayTime(daytime) {
+        this.timeOfTheDayEl.innerHTML = daytime
+    }
+
+    // ================================================================================================
 
     renderUpdatedAt(timeString, dateString) {
         this.updatedAtEl.innerHTML = timeString
         this.updatedAtEl.setAttribute('title', `${dateString} at ${timeString}`)
     }
 
+    // ================================================================================================
+
     showBackgroundVideo() {
+        // this.videoEl.setAttribute('src', videoDayClearSky)
         this.videoEl.setAttribute('src', videoNightClearSky)
+        // this.videoEl.setAttribute('src', videoEveningSky)
         this.videoEl.play()
     }
+
+    // ================================================================================================
+
+    renderBigIcon(icon) { 
+        this.bigIconEl.innerHTML = ``
+        const img = document.createElement('img')
+        img.src = `${icon}`
+        this.bigIconEl.appendChild(img)
+    }
+
+    // ================================================================================================
+
+    renderFeelsLike(temp) {
+        this.feelsLikeEl.innerHTML = `Feels like ${temp}°C`
+    }
+
+    // ================================================================================================
+
+    renderPrecipitation([precipitationProbability, precipitation, rain, showers, snowDepth, snowfall]) {
+        let toRender = ''
+        if(precipitation === 0 && precipitationProbability === 0) toRender = `No precipitation (0%)`
+        this.precipitationEl.innerHTML = toRender
+    }
+
+    // ================================================================================================
+
+    renderHourly(obj) {
+        const amountOfHourItems = 6 // how many of such items in the UI to render
+
+        // iterating and creating a long string of new elements to render
+        const elementsToRender = obj.time.map((timeItem, i) => {   // all of those arrays (like 'time' in 'obj') have the same length
+            if(i > amountOfHourItems-1) return  // return only <amountOfHourItems> elements to render
+            return this.renderHour(timeItem, obj.tempGeneral[i], obj.tempFeelsLike[i], obj.weathercodes[i], obj.precipitation[i], obj.humidity
+[i], obj.cloudCover[i])
+        }).join('')
+
+        this.hourlyBoxEl.innerHTML = elementsToRender
+    }
+
+    // ================================================================================================
+
+    renderHour(time, tempGeneral, tempFeelsLike, description, precipitation, humidity, cloudCover) {   // a dependency of `renderHourly`
+        
+        return `<div class="weather__hour">
+                    <div class="weather__hour-time"><span>${timeIcon}</span>${time}</div>
+                    <div class="weather__hour-temp">${Math.floor(tempGeneral)}°C <span title="Feels like">(${Math.floor(tempFeelsLike)}°C)</span></div>
+                    <div class="weather__hour-description">${description}</div>
+                    <div class="weather__hour-precipitation" title="Precipitation"><span>${precipitationIcon}</span> ${precipitation}%</div>
+                    <div class="weather__hour-row">
+                    <div class="weather__hour-humidity" title="Humidity"><span>${humidityIcon}</span> ${humidity}%</div>
+                    <div class="weather__hour-clouds" title="Cloud cover"><span>${cloudCoverIcon}</span> ${cloudCover}%</div>
+                    </div>
+                </div>`
+    }
+
+    // ================================================================================================
+
+    renderDaily(obj) {
+        console.log(obj)
+        const amountOfDayItems = 3 // how many of such items in the UI to render
+        const todayFormatted = `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
+        let indexOfToday = obj.time.findIndex(x => x === todayFormatted)  // decrementing because we're incrementing it in the loop below
+
+        // iterating and creating a long string of new elements to render
+        const elementsToRender = obj.time.map((el, index) => {    // all of those arrays (like 'time' in 'obj') have the same length
+            if(index > amountOfDayItems-1) return   // return only <amountOfDayItems> elements to render
+            indexOfToday += 1
+            return this.renderDay(index, 
+                obj.temperature_2m_min[indexOfToday], 
+                obj.temperature_2m_max[indexOfToday], 
+                obj.apparent_temperature_max[indexOfToday], 
+                obj.apparent_temperature_min[indexOfToday],
+                obj.weathercodes[indexOfToday],
+                obj.uv_index_max[indexOfToday],
+                obj.sunrise[indexOfToday],
+                obj.sunset[indexOfToday],
+                obj.precipitation_probability_max[indexOfToday],
+                obj.daylight_duration[indexOfToday],
+                obj.precipitation_hours[indexOfToday],
+                obj.sunshine_duration[indexOfToday],
+                obj.time[indexOfToday])
+        }).join('')
+
+        this.dailyBoxEl.innerHTML = elementsToRender
+    }
+
+    // ================================================================================================
+
+    // a dependency of `renderDaily`:
+    renderDay(index, tempMin, tempMax, tempFeelLikeMax, tempFeelLikeMin, desc, uv, sunrise, sunset, precipitationProbability, daylightDuration, precipitationHours, sunshineDuration, date) {    
+        const dayNames = [`Tomorrow`, `The Day After Tomorrow`, `In 3 Days`, `In 4 Days`, `In 5 Days`, `In 6 Days`]
+        const dateFormatted = date.split('-').reverse().join('/').replace('/20','/')
+        const daylightDur = `${daylightDuration.split(' ')[0]}h ${daylightDuration.split(' ')[1]}m`
+        const sunshineDur = `${sunshineDuration.split(' ')[0]}h ${sunshineDuration.split(' ')[1]}m`
+
+        return `<div class="weather__day">
+                    <div class="weather__day-name">${dayNames[index]} (${dateFormatted})</div>
+                    <div class="weather__day-temp">${tempMin}-${tempMax}°C <span>(${tempFeelLikeMin}-${tempFeelLikeMax}°C)</span></div>
+                    <div class="weather__day-description">${desc}</div>
+
+                    <div class="weather__day-line">
+                        <div class="weather__day-uv" title="UV index"><span></span>${uv.toFixed(1)}</div>
+                        <span class="weather__day-daylight" title="Daylight duration"><span>${lightbulbIcon}</span> ${daylightDur}</span>                        
+                        <span class="weather__day-sunshine" title="Sunshine duration"><span>${sunIcon}</span>  ${sunshineDur}</span>                        
+                    </div>
+                    <div class="weather__day-sun">
+                        <span class="weather__day-sunrise" title="Sunrise"><span>${sunriseIcon}</span>${sunrise}</span>
+                        <span class="weather__day-sunset" title="Sunset"><span>${sunsetIcon}</span>${sunset}</span>
+                    </div>
+                    <div class="weather__day-precipitation" title="Precipitation probability"><span>${precipitationIcon}</span>${precipitationProbability}%</div>
+                </div>`
+    }
+
+    // ================================================================================================
+
 }
 
 export default View
