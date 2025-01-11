@@ -1,3 +1,4 @@
+import { Value } from 'sass';
 import { fetchWeather, fetchTimezone } from './model-dependencies/apis.js'
 import myObject from './model-dependencies/weathercodes.js';
 
@@ -5,6 +6,38 @@ class Model {
     #state = {}
     constructor() {
         this.myCoords = [41.0082, 28.9784]  // lat & long of Istanbul
+        this.sunriseTime = 0
+        this.sunsetTime = 0
+    }
+
+    // ================================================================================================
+
+    setSunriseTime(value) {
+        const hours = new Date(value).getHours()
+        const minutes = new Date(value).getMinutes()
+        this.sunriseTime = `${hours}:${minutes}`
+        console.log(`sunrise today:`, this.sunriseTime)
+    }
+    
+    // ================================================================================================
+    
+    setSunsetTime(value) {
+        const hours = new Date(value).getHours()
+        const minutes = new Date(value).getMinutes()
+        this.sunsetTime = `${hours}:${minutes}`
+        console.log(`sunset today:`, this.sunsetTime)
+    }
+
+    // ================================================================================================
+
+    getTodayString() {
+        return `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
+    }
+
+    // ================================================================================================
+
+    getNowTime() {
+        return `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`
     }
 
     // ================================================================================================
@@ -99,14 +132,18 @@ class Model {
             case `1_Night`:
             case `2_Night`:
             case `3_Night`:
+            // case `1_Evening`:
+            // case `2_Evening`:
                 return import(`../../img/weather-icons/starry-night.svg`);
             default:
+                return import(`../../img/weather-icons/starry-night.svg`);
                 break;
         }
     }
 
     // ================================================================================================
 
+    // formatting the obj that I am passing here in a neat, ready-to-be-rendered format
     formatHourly(obj) {
         const time = obj.time.map(timeStr => `${new Date(timeStr).getHours()}:${new Date(timeStr).getMinutes().toString().padStart(2,0)}`)
         const tempFeelsLike = obj.apparent_temperature
@@ -126,6 +163,7 @@ class Model {
 
     // ================================================================================================
 
+    // formatting the obj that I am passing here in a neat, ready-to-be-rendered format
     formatDaily(obj) {
         const myObj = JSON.parse(JSON.stringify(obj))
         myObj.apparent_temperature_max = myObj.apparent_temperature_max.map(temp => Math.floor(temp))

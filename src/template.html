@@ -18,14 +18,14 @@
     <div class="title-box">
         <h1 class="title"><%= htmlWebpackPlugin.options.title %></h1>
         <div class="time-box">
-            <div class="time-day">...</div>
+            <div class="time-day"></div>
             <div class="time-icon">
             </div>
             <div class="time-element"><span></span></div>
         </div>
-        <div class="sunset-box">
-            <div class="sunset-word">Sunrise:</div>
-            <div class="sunset-time">...</div>
+        <div class="sun-box">
+            <div class="sun-word"></div>
+            <div class="sun-time"></div>
         </div>
     </div>
 
@@ -47,81 +47,62 @@
                     <div class="weather__line weather__location">
                         <span class="weather__line-title">Location:</span> 
                         <span class="weather__place">...</span> 
-                        <span class="weather__coords">...</span>
-                    </div>
-                    <div class="weather__line weather__wind">
-                        <span class="weather__line-title">Wind:</span> 
-                        <span class="weather__wind-speed">...</span>
-                        <span class="weather__wind-direction">...</span>
+                        <span class="weather__coords"></span>
                     </div>
                     <div class="weather__line weather__precipitation">
-                        <span class="weather__line-title">Precipitation:</span> 
+                        <span class="weather__line-title">Precipitation:</span>
                         <span class="weather__precipitation-details">...</span>
                     </div>
-                    <div class="weather__line weather__uv">
-                        <span class="weather__line-title">UV Index:</span> 
-                        <span class="weather__uv-index">...</span>
+
+                    <div class="weather__line-box">
+                        <div class="weather__col">
+                            <div class="weather__line weather__wind">
+                                <span class="weather__line-title">Wind:</span>
+                                <span class="weather__wind-speed">...</span>
+                                <span class="weather__wind-direction"></span>
+                            </div>
+                            <div class="weather__line weather__uv">
+                                <span class="weather__line-title">UV Index:</span>
+                                <span class="weather__uv-index">...</span>
+                            </div>
+                            <div class="weather__line weather__humidity">
+                                <span class="weather__line-title">Humidity:</span>
+                                <span class="weather__humidity-el">...</span>
+                            </div>
+                        </div>
+                        <div class="weather__col">
+                            <div class="weather__line weather__cloud-cover">
+                                <span class="weather__line-title">Cloud cover:</span>
+                                <span class="weather__humidity-cloud-cover-el">...</span>
+                            </div>
+                            <div class="weather__line weather__light">
+                                <span class="weather__line-title">Daylight Duration:</span>
+                                <span class="weather__humidity-light-el">...</span>
+                            </div>
+                            <div class="weather__line weather__sun">
+                                <span class="weather__line-title">Sunshine Duration:</span>
+                                <span class="weather__humidity-sun-el">...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="weather__hourly">
                     <div class="weather__small-title">Hourly</div>
-                    <div class="weather__hours">
-                        <div class="weather__hour">
-                            <div class="weather__hour-time">01:00</div>
-                            <div class="weather__hour-temp">13°C</div>
-                            <div class="weather__hour-description">Blah-dee blah-dee blah-dee blah!</div>
-                            <div class="weather__hour-precipitation">Hee-bee hee-bee hee-bee hee!</div>
-                        </div>
-                        <div class="weather__hour">
-                            <div class="weather__hour-time">02:00</div>
-                            <div class="weather__hour-temp">13°C</div>
-                            <div class="weather__hour-description">Blah-dee blah-dee blah-dee blah!</div>
-                            <div class="weather__hour-precipitation">Hee-bee hee-bee hee-bee hee!</div>
-                        </div>
-                        <div class="weather__hour">
-                            <div class="weather__hour-time">03:00</div>
-                            <div class="weather__hour-temp">13°C</div>
-                            <div class="weather__hour-description">Blah-dee blah-dee blah-dee blah!</div>
-                            <div class="weather__hour-precipitation">Hee-bee hee-bee hee-bee hee!</div>
-                        </div>
-                    </div>
+                    <div class="weather__hours"></div>
                 </div>
 
                 <div class="weather__daily">
                     <div class="weather__small-title">Daily</div>
-                    <div class="weather__days">
-                        <div class="weather__day">
-                            <div class="weather__day-name">Tomorrow</div>
-                            <div class="weather__day-temp">15</div>
-                            <div class="weather__day-description">Blah-dee blah-dee blah-dee blah!</div>
-                            <div class="weather__day-uv">2.4</div>
-                            <div class="weather__day-sunset">17:28</div>
-                            <div class="weather__day-precipitation">Hee-bee hee-bee hee-bee hee!</div>
-                        </div>
-                        <div class="weather__day">
-                            <div class="weather__day-name">The Day After Tomorrow</div>
-                            <div class="weather__day-temp">15</div>
-                            <div class="weather__day-description">Blah-dee blah-dee blah-dee blah!</div>
-                            <div class="weather__day-uv">2.4</div>
-                            <div class="weather__day-sunset">17:28</div>
-                            <div class="weather__day-precipitation">Hee-bee hee-bee hee-bee hee!</div>
-                        </div>
-                        <div class="weather__day">
-                            <div class="weather__day-name">In 3 days</div>
-                            <div class="weather__day-temp">15</div>
-                            <div class="weather__day-description">Blah-dee blah-dee blah-dee blah!</div>
-                            <div class="weather__day-uv">2.4</div>
-                            <div class="weather__day-sunset">17:28</div>
-                            <div class="weather__day-precipitation">Hee-bee hee-bee hee-bee hee!</div>
-                        </div>
-                    </div>
+                    <div class="weather__days"></div>
 
                 </div>
                 <div class="weather__updated"><span>Updated at</span> <span class="weather__updated-time">...</span></div>
             </div>
             
-            <button class="change-location-btn">Change Location</button>
+            <div class="button-box">
+                <button class="change-location-btn">Change Location</button>
+            </div>
             
         </div>
     </div>

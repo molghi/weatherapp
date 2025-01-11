@@ -5,83 +5,79 @@ import '../styles/main.scss'
 
 import Model from './modules/Model.js'  
 import View from './modules/View.js'  
+import { renderAll, renderSunriseSunset } from './modules/controller-dependencies/rendering.js'
 import KeyCommands from './modules/KeyCommands.js'  // to do sth by typing certain keys
 import LS from './modules/Storage.js'  // to work with local storage
-
 
 const Logic = new Model()
 const Visual = new View()
 
+// ===========================================================================================================================
+
 async function init() {
     try {
-        // fetching from the timezone API:
-        const fetchedTimezone = await Logic.fetchTimezone(Logic.myCoords);
-        console.log(fetchedTimezone)
+        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
 
-        // fetching from the weather API
-        const fetchedWeather = await Logic.fetchWeather(Logic.myCoords);
-        console.log(fetchedWeather)
+        // rendering main block, hourly, daily, title box, and making time update every min
+        await renderAll(fetchedTimezone, fetchedWeather)  // I import it above
 
-        // rendering local time at the location
-        const offsetInSeconds = fetchedTimezone.timezone.offset_sec
-        const localTime = Logic.getLocalTime(offsetInSeconds)
-        Visual.renderTimeElement(localTime)
-        Visual.renderTimeIcon(localTime)
+        Visual.showBackgroundVideo()
 
-        // rendering the location and coordinates
-        Visual.renderLocationAndCoords(fetchedTimezone)
+        logOutTimeNow()
 
-        // rendering the sunrise fetchedWeather.daily.sunrise[8]
-        const sunriseRaw = fetchedWeather.daily.sunrise[8]
-        const sunriseRawTime = new Date(sunriseRaw).getTime()
-        const timeUntilSunrise = Logic.calcSunrise(sunriseRawTime)
-        Visual.renderSunrise(timeUntilSunrise)
-
-        // rendering current air temp and weather description
-        const description = Logic.getWeatherDescription(fetchedWeather.weathercode)  // getting description by weather code
-        Visual.renderTempAndDesc(fetchedWeather.temp, description)
-
-        // rendering the big icon and the day time element
-        const nowHours = new Date().getHours()
-        const dayTime = Logic.defineDayTime(nowHours)
-        const bigIcon = await Logic.defineBigIcon(fetchedWeather.weathercode, dayTime)
-        Visual.renderBigIcon(bigIcon.default)
-        Visual.renderDayTime(dayTime)
-
-        // rendering wind
-        const windDirectionExplanation = Logic.getWindDirection(fetchedWeather.winddirection)
-        Visual.renderWind(fetchedWeather.windspeed, windDirectionExplanation)
-
-        // rendering uv index
-        const uvIndex = fetchedWeather.daily.uv_index_max[7]
-        Visual.renderUvIndex(uvIndex)
-
-        // rendering when it was fetched
-        const fetchedAt = fetchedWeather.fetchedAt.hoursMinutes
-        const fetchedAtDate = fetchedWeather.fetchedAt.date
-        Visual.renderUpdatedAt(fetchedAt, fetchedAtDate)
-
-        // rendering Hourly
-        const hourlyObj = {}
-        const upcomingHours = 24  // amount of upcoming hours to have data about
-        Object.keys(fetchedWeather.hourly).forEach(key => hourlyObj[key] = fetchedWeather.hourly[key].slice(0, upcomingHours))  // populating `hourlyObj`
-        const formattedToRender = Logic.formatHourly(hourlyObj)   // it's an obj of props selected by me for the upcoming 24h
-        Visual.renderHourly(formattedToRender)
-
-        // rendering Feels like
-        const nowFeelsLike = Math.floor(formattedToRender.tempFeelsLike[0])
-        Visual.renderFeelsLike(nowFeelsLike)
-
-        // rendering precipitation
-        const precipitation = [formattedToRender.precipitationProbability[0], formattedToRender.precipitation[0], formattedToRender.rain[0], formattedToRender.showers[0], formattedToRender.snowDepth[0], formattedToRender.snowfall[0]]
-        Visual.renderPrecipitation(precipitation)
-
-        // rendering Daily
-        const dailyFormatted = Logic.formatDaily(fetchedWeather.daily)
-        Visual.renderDaily(dailyFormatted)
+        // setting sunrise and sunset time
+        const todayString = Logic.getTodayString()  // formatted like '2025-01-11'
+        const indexOfTodayInDaily = fetchedWeather.daily.sunset.findIndex(x => x.startsWith(todayString))
+        Logic.setSunriseTime(fetchedWeather.daily.sunrise[indexOfTodayInDaily])
+        Logic.setSunsetTime(fetchedWeather.daily.sunset[indexOfTodayInDaily])
+        renderSunriseSunset(fetchedWeather)
 
     } catch (error) {
         console.log(error)
     }
 }
 init()
+
+// ===========================================================================================================================
+
+// re-fetching and re-rendering the weather every hour
+setInterval(async () => {
+    try {
+        await init();
+    } catch (error) {
+        console.error('Error during periodic init:', error);
+    }
+}, 3600 * 1000) // 3600 * 1000 milliseconds = 1 hour
+
+// ===========================================================================================================================
+
+// fetching timezone and weather
+async function fetchTimezoneAndWeather(timezoneCoords, weatherCoords) {
+    try {
+        // fetching from the timezone API
+        const fetchedTimezone = await Logic.fetchTimezone(timezoneCoords);
+        console.log(`fetchedTimezone:`,fetchedTimezone)
+
+        // fetching from the weather API
+        const fetchedWeather = await Logic.fetchWeather(weatherCoords);
+        console.log(`fetchedWeather:`,fetchedWeather)
+
+        return [fetchedTimezone, fetchedWeather]
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+// ===========================================================================================================================
+
+function logOutTimeNow() {
+    console.log(`⏰ ${new Date().getHours()}:${(new Date().getMinutes()).toString().padStart(2,0)}`)
+    setInterval(() => {
+        console.log(`⏰ ${new Date().getHours()}:${(new Date().getMinutes()).toString().padStart(2,0)}`)
+    }, 60000);
+}
+
+// ===========================================================================================================================
+
+// exporting for some dependencies:
+export { Logic, Visual } 
