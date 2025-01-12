@@ -28,7 +28,19 @@ class View {
         this.cloudCoverEl = document.querySelector('.weather__humidity-cloud-cover-el')
         this.lightEl = document.querySelector('.weather__humidity-light-el')
         this.sunEl = document.querySelector('.weather__humidity-sun-el')
-        
+        this.locationTitleEl = document.querySelector('.weather__location .weather__line-title') // Location:
+        this.precipitationTitleEl = document.querySelector('.weather__precipitation .weather__line-title') // Precipitation:
+        this.windTitleEl = document.querySelector('.weather__wind .weather__line-title') // Wind:
+        this.uvTitleEl = document.querySelector('.weather__uv .weather__line-title') // UV Index:
+        this.humidityTitleEl = document.querySelector('.weather__humidity .weather__line-title') // Humidity:
+        this.cloudCoverTitleEl = document.querySelector('.weather__cloud-cover .weather__line-title') // Cloud cover:
+        this.daylightTitleEl = document.querySelector('.weather__light .weather__line-title') // Daylight Duration:
+        this.sunshineTitleEl = document.querySelector('.weather__sun .weather__line-title') // Sunshine Duration:
+        this.hourlyTitleEl = document.querySelector('.weather__hourly .weather__small-title') // Hourly
+        this.dailyTitleEl = document.querySelector('.weather__daily .weather__small-title') // Daily
+        this.updatedTitleEl = document.querySelector('.weather__updated span:nth-child(1)') // Updated at
+        this.changeLocBtnBoxEl = document.querySelector('.button-box')
+
         this.celsiusSign = "°C"
         this.fahrenheitSign = "°F"
         this.latitudeSign = `° N`
@@ -46,6 +58,7 @@ class View {
         const {city, continent, country, flag, coords} = obj
         this.locationEl.innerHTML = `${city}, <span class="weather__country">${country}<span class="weather__flag">${flag}</span></span>, ${continent}, Terra`
         this.coordsEl.innerHTML = `(${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`
+        this.locationTitleEl.innerHTML = `Location:`
     }
 
     // ================================================================================================
@@ -91,6 +104,7 @@ class View {
     renderWind(windspeed, winddir) {
         this.windSpeedEl.innerHTML = `${windspeed} km/h,`
         this.windDirectionEl.innerHTML = `${winddir}`
+        this.windTitleEl.innerHTML = `Wind:`
     }
 
     // ================================================================================================
@@ -98,6 +112,7 @@ class View {
     // rendering .weather__uv-index
     renderUvIndex(index) {
         this.uvIndexEl.innerHTML = index.toFixed(1)
+        this.uvTitleEl.innerHTML = `UV Index:`
     }
 
     // ================================================================================================
@@ -127,6 +142,7 @@ class View {
     renderUpdatedAt(timeString, dateString) {
         this.updatedAtEl.innerHTML = timeString
         this.updatedAtEl.setAttribute('title', `${dateString} at ${timeString}`)
+        this.updatedTitleEl.innerHTML = `Updated at`
     }
 
     // ================================================================================================
@@ -160,9 +176,22 @@ class View {
     // rendering .weather__precipitation-details
     renderPrecipitation([precipitationProbability, precipitation, rain, showers, snowDepth, snowfall]) {
         console.log(`renderPrecipitation:`, precipitationProbability, precipitation, rain, showers, snowDepth, snowfall)
-        let toRender = ''
-        if(precipitation === 0 && precipitationProbability === 0) toRender = `No precipitation (0%)`
+        const valuesMap = {
+            mm0: `No precipitation`,  // mm0 means 0 mm
+            mm05: `Scattered droplets`,
+            mm1: `Light rain`, // 1–5 mm
+            mm5: `Moderate rain`, // 5–15 mm
+            mm15: `Heavy rain` // 15+ mm
+        }
+        let toRender = `<span title="Precipitation probability">${precipitationProbability}%</span>`
+        if(precipitation === 0 && precipitationProbability === 0) toRender += `, ${valuesMap.mm0}`;
+        if(precipitation < 1) toRender += `, ${valuesMap.mm05}`;
+        if(precipitation >= 1 && precipitation < 5) toRender += `, ${valuesMap.mm1}`;
+        if(precipitation >= 5 && precipitation < 15) toRender += `, ${valuesMap.mm5}`;
+        if(precipitation >= 15) toRender += `, ${valuesMap.mm15}`;
         this.precipitationEl.innerHTML = toRender
+
+        this.precipitationTitleEl.innerHTML = `Precipitation:`
     }
 
     // ================================================================================================
@@ -181,6 +210,7 @@ class View {
         }).join('')
 
         this.hourlyBoxEl.innerHTML = elementsToRender
+        this.hourlyTitleEl.innerHTML = `Hourly`
     }
 
     // ================================================================================================
@@ -229,6 +259,7 @@ class View {
         }).join('')
 
         this.dailyBoxEl.innerHTML = elementsToRender
+        this.dailyTitleEl.innerHTML = `Daily`
     }
 
     // ================================================================================================
@@ -263,6 +294,7 @@ class View {
     // rendering .weather__humidity-el
     renderHumidity(value) {
         this.humidityEl.innerHTML = value + '%'
+        this.humidityTitleEl.innerHTML = `Humidity:`
     }
 
     // ================================================================================================
@@ -270,6 +302,8 @@ class View {
     // rendering .weather__humidity-cloud-cover-el
     renderCloudCover(value) {
         this.cloudCoverEl.innerHTML = value + '%'
+        this.cloudCoverEl.setAttribute('title', `The percentage of cloud coverage`)
+        this.cloudCoverTitleEl.innerHTML = `Cloud cover:`
     }
 
     // ================================================================================================
@@ -278,6 +312,27 @@ class View {
     renderDaylightSunshine(daylightDuration, sunshineDuration) {
         this.lightEl.innerHTML = `<span title="Daylight duration">${daylightDuration}</span>`
         this.sunEl.innerHTML = `<span title="Sunshine duration">${sunshineDuration}</span>`
+        this.daylightTitleEl.innerHTML = `Daylight Duration:`
+        this.sunshineTitleEl.innerHTML = `Sunshine Duration:`
+    }
+
+    // ================================================================================================
+
+    toggleSpinner(flag='show') {
+        if(flag==='hide') {
+            document.querySelector('.spinner-wrapper').remove()
+        } else {
+            const div = document.createElement('div')
+            div.classList.add('spinner-wrapper')
+            div.innerHTML = `<div class="spinner-pulse"></div>`
+            document.body.appendChild(div)
+        }
+    }
+
+    // ================================================================================================
+
+    renderChangeLocBtn() {
+        this.changeLocBtnBoxEl.innerHTML = `<button class="change-location-btn">Change Location</button>`
     }
 
     // ================================================================================================

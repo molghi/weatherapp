@@ -34,6 +34,10 @@ module.exports = {
                 },
             },
             {
+                test: /sass\.dart\.js$/,
+                parser: { requireEnsure: false },
+            },
+            {
                 test: /\.scss$/,  
                 use: ['style-loader', 'css-loader', 'sass-loader']
             }, 
@@ -65,5 +69,9 @@ module.exports = {
             favicon: './src/img/favicon.ico'
         }),
         // new BundleAnalyzerPlugin()
-    ]
+    ], 
+    stats: {
+        warningsFilter: [/sass\.dart\.js/],
+    }
 }
+

@@ -32,6 +32,8 @@ async function init() {
         Logic.setSunsetTime(fetchedWeather.daily.sunset[indexOfTodayInDaily])
         renderSunriseSunset(fetchedWeather)
 
+        Visual.renderChangeLocBtn()  // rendering Change Location button
+
     } catch (error) {
         console.log(error)
     }

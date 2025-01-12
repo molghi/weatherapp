@@ -1,6 +1,7 @@
 import { Value } from 'sass';
 import { fetchWeather, fetchTimezone } from './model-dependencies/apis.js'
 import myObject from './model-dependencies/weathercodes.js';
+import defineBigIcon from './model-dependencies/defineBigIcon.js';
 
 class Model {
     #state = {}
@@ -32,6 +33,12 @@ class Model {
 
     getTodayString() {
         return `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
+    }
+
+    // ================================================================================================
+
+    getTomorrowString() {
+        return `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()+1).toString().padStart(2,0)}`
     }
 
     // ================================================================================================
@@ -123,22 +130,7 @@ class Model {
     // ================================================================================================
 
     async defineBigIcon(weathercode, dayTime) {
-        console.log('defineBigIcon:', weathercode, dayTime)
-        const string = `${weathercode}_${dayTime}`
-
-        switch (string) {
-            case `0_Evening`:
-                return import(`../../img/weather-icons/clear-night.svg`);
-            case `1_Night`:
-            case `2_Night`:
-            case `3_Night`:
-            // case `1_Evening`:
-            // case `2_Evening`:
-                return import(`../../img/weather-icons/starry-night.svg`);
-            default:
-                return import(`../../img/weather-icons/starry-night.svg`);
-                break;
-        }
+        return await defineBigIcon(weathercode, dayTime);  // I import it above
     }
 
     // ================================================================================================

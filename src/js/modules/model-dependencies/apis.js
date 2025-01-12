@@ -1,4 +1,5 @@
 import { API_KEY } from '../config.js'
+import { Logic, Visual } from '../../Controller.js'   // needed to show and then hide the spinner: Visual.toggleSpinner
 
 async function fetchWeather(coordsArr) {
     try {
@@ -9,9 +10,14 @@ async function fetchWeather(coordsArr) {
         // temperature_2m,precipitation_probability,precipitation,weathercode // hourly
         // weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,uv_index_clear_sky_max,precipitation_hours,precipitation_probability_max // daily
 
-        const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${coordsArr[0]}&longitude=${coordsArr[1]}&hourly=${hourlyParams}&daily=${dailyParams}&current_weather=true&past_days=7&timezone=${timezoneParams}` // 
+        Visual.toggleSpinner()
+
+        const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${coordsArr[0]}&longitude=${coordsArr[1]}&hourly=${hourlyParams}&daily=${dailyParams}&current_weather=true&past_days=7&timezone=${timezoneParams}` 
         const response = await fetch(API_URL)
         if(!response.ok) throw new Error('>> Failed to fetch the weather')
+
+        Visual.toggleSpinner('hide')
+
         const data = await response.json()
         const myObj = {
             temp: data.current_weather.temperature,

@@ -199,8 +199,12 @@ function renderSunriseSunset(fetchedWeather) {
         return console.log(`render sunset (2)`)
     }
     console.log(`render sunset (3)`)
+   } else if((+nowHours >= 0 && +nowHours < +sunriseHours) || (+nowHours === +sunriseHours && +nowMinutes <= +sunriseMinutes)) {
+    console.log(`render sunrise of today (it's past midnight but before the sunrise)`)
    } else {
     console.log('render sunrise of the next day')
+    // renderSunrise(fetchedWeather, `ofTomorrow`)
+    renderSunrise(fetchedWeather)
    }
 }
 
@@ -209,13 +213,18 @@ function renderSunriseSunset(fetchedWeather) {
 
 
 // a dependency of `renderSunriseSunset` -- rendering the sunrise (.sun-time) 
-function renderSunrise(fetchedWeather) {
-    const tomorrowFormatted = `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()+1).toString().padStart(2,0)}`
-    const indexOfTomorrow = fetchedWeather.daily.sunrise.findIndex(sunriseStr => sunriseStr.startsWith(tomorrowFormatted))
-    const sunriseRaw = fetchedWeather.daily.sunrise[indexOfTomorrow]
-    const sunriseRawTime = new Date(sunriseRaw).getTime()
-    const timeUntilSunrise = Logic.calcSunrise(sunriseRawTime)
-    Visual.renderSunrise(timeUntilSunrise) 
+function renderSunrise(fetchedWeather,type='ofThisDay') {
+    const tomorrowFormatted = Logic.getTomorrowString()   // formatted like: '2025-01-12'
+    if(type==='ofTomorrow') {
+        console.log(`tomorrowFormatted:`,tomorrowFormatted)
+        // get the sunrise of tomorrow, save it to Model.sunriseTime, calc time until it, render it
+    } else {
+        const indexOfTomorrow = fetchedWeather.daily.sunrise.findIndex(sunriseStr => sunriseStr.startsWith(tomorrowFormatted))
+        const sunriseRaw = fetchedWeather.daily.sunrise[indexOfTomorrow]
+        const sunriseRawTime = new Date(sunriseRaw).getTime()
+        const timeUntilSunrise = Logic.calcSunrise(sunriseRawTime)
+        Visual.renderSunrise(timeUntilSunrise) 
+    }
 }
 
 
