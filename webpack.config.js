@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = {
@@ -26,13 +27,6 @@ module.exports = {
     },
     module: {  
         rules: [
-            {
-                test: /src_img_weather-icons.*\.js$/,  // Match files starting with 'src_img_weather-icons' and ending with .js
-                type: 'asset/resource',  // Use asset modules to handle these files
-                generator: {
-                    filename: 'assets/icons-js/[name].[hash][ext]',  // Output to assets/icons-js/ folder
-                },
-            },
             {
                 test: /\.(mp4|webm|ogg|mov)$/,  // Adjust extensions as needed
                 type: 'asset/resource',
@@ -83,6 +77,14 @@ module.exports = {
             favicon: './src/img/favicon.ico'
         }),
         // new BundleAnalyzerPlugin()
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: path.resolve(__dirname, 'src/vid'), // Source folder
+                    to: 'assets/videos', // Destination in dist
+                },
+            ],
+        }),
     ], 
     stats: {
         warningsFilter: [/sass\.dart\.js/],

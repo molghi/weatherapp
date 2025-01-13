@@ -184,7 +184,7 @@ class Model {
 
     // needed to define the bg video
     defineWeatherType() {
-        defineWeatherType(this.timeOfTheDay, this.weathercode);  // I import it above
+        return defineWeatherType(this.timeOfTheDay, this.weathercode);  // I import it above
     }
 
 }

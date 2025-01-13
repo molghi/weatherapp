@@ -21,7 +21,7 @@ async function init() {
         // rendering main block, hourly, daily, title box, and making time update every min
         renderAll(fetchedTimezone, fetchedWeather)  // I import it above
 
-        Visual.showBackgroundVideo()
+        // Visual.showBackgroundVideo()
 
         logOutTimeNow()
 
@@ -34,7 +34,8 @@ async function init() {
 
         Visual.renderChangeLocBtn()  // rendering Change Location button
 
-        Logic.defineWeatherType()  // needed to define the bg video
+        const bgVideoPath = Logic.defineWeatherType()  // needed to define the bg video
+        Visual.showBackgroundVideo(bgVideoPath)
 
     } catch (error) {
         console.log(error)

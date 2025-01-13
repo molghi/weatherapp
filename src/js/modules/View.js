@@ -1,4 +1,3 @@
-import videoNightClearSky from '../../vid/night-clear-sky.mp4';
 import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon } from './view-dependencies/icons.js'
 
 class View {
@@ -17,6 +16,7 @@ class View {
         this.timeOfTheDayEl = document.querySelector('.time-day')
         this.timeboxIconEl = document.querySelector('.time-icon')
         this.updatedAtEl = document.querySelector('.weather__updated-time')
+        this.videoBoxEl = document.querySelector('.video-box')
         this.videoEl = document.querySelector('video')
         this.bigIconEl = document.querySelector('.weather__icon')
         this.precipitationEl = document.querySelector('.weather__precipitation-details')
@@ -146,10 +146,29 @@ class View {
     // ================================================================================================
 
     showBackgroundVideo(path) {
-        // return console.log(`showBackgroundVideo early return`)
-        // this.videoEl.setAttribute('src', path)
-        this.videoEl.setAttribute('src', videoNightClearSky)
-        this.videoEl.play()
+        this.videoBoxEl.style.animation = 'fadein 5s linear'
+        this.videoEl.pause(); // Pause current video
+        this.videoEl.setAttribute('src', path)
+        this.videoEl.currentTime = 0; // Start from the beginning
+
+        setTimeout(() => {
+            this.videoBoxEl.style.animation = 'none'
+        }, 5000);
+
+        this.videoEl.play().catch((error) => {
+            console.log('Error playing bg video:', error);
+            // Fallback to default video if needed
+            this.videoEl.setAttribute('src', 'assets/videos/night-smoke.mp4');
+            this.videoEl.play();
+        })
+    }
+
+    // ================================================================================================
+
+    filterVideo(flag) {
+        if(flag==='reset' || flag==='default') {
+            return this.videoEl.style.filter = 'none'
+        }
     }
 
     // ================================================================================================

@@ -1,20 +1,30 @@
+@keyframes fadein {
+    0% {
+        filter: brightness(0);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
 
 .video-box {
     position: absolute;
     z-index: -10000;
     width: 100%;
     height: 100%;
+    transition: all .3s;
+    animation: fadein 5s linear;
     
-    &:after {
-        content: '';
-        position: absolute;
-        z-index: -1;
-        top: 0;
-        left: 0;
-        background: rgba($color: #000000, $alpha: 0.5);
-        width: 100%;
-        height: 100%;
-    }
+    // &:after {
+    //     content: '';
+    //     position: absolute;
+    //     z-index: -1;
+    //     top: 0;
+    //     left: 0;
+    //     background: rgba($color: #000000, $alpha: 0.5);
+    //     width: 100%;
+    //     height: 100%;
+    // }
     
     video {
         display: block;
@@ -24,6 +34,7 @@
         left: 0;
         right: 0;
         bottom: 0;
+        filter: brightness(0.3) blur(1px);
         // width: 100%;
         // height: 100%;
         width: 100vw;
