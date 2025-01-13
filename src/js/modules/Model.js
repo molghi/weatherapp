@@ -2,6 +2,7 @@ import { Value } from 'sass';
 import { fetchWeather, fetchTimezone } from './model-dependencies/apis.js'
 import myObject from './model-dependencies/weathercodes.js';
 import defineBigIcon from './model-dependencies/defineBigIcon.js';
+import defineWeatherType from './model-dependencies/defineWeatherType.js';
 
 class Model {
     #state = {}
@@ -9,6 +10,8 @@ class Model {
         this.myCoords = [41.0082, 28.9784]  // lat & long of Istanbul
         this.sunriseTime = 0
         this.sunsetTime = 0
+        this.timeOfTheDay = ''
+        this.weathercode = 0
     }
 
     // ================================================================================================
@@ -129,8 +132,9 @@ class Model {
 
     // ================================================================================================
 
-    async defineBigIcon(weathercode, dayTime) {
-        return await defineBigIcon(weathercode, dayTime);  // I import it above
+    defineBigIcon(weathercode, dayTime) {
+        const path = defineBigIcon(weathercode, dayTime)  // I import it above
+        return path 
     }
 
     // ================================================================================================
@@ -174,6 +178,13 @@ class Model {
         delete myObj.weather_code
 
         return myObj
+    }
+
+    // ================================================================================================
+
+    // needed to define the bg video
+    defineWeatherType() {
+        defineWeatherType(this.timeOfTheDay, this.weathercode);  // I import it above
     }
 
 }

@@ -1,6 +1,4 @@
 import videoNightClearSky from '../../vid/night-clear-sky.mp4';
-import videoDayClearSky from '../../vid/day-clear-sky.mp4';
-import videoEveningSky from '../../vid/evening-sky.mp4';
 import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon } from './view-dependencies/icons.js'
 
 class View {
@@ -147,10 +145,10 @@ class View {
 
     // ================================================================================================
 
-    showBackgroundVideo() {
-        // this.videoEl.setAttribute('src', videoDayClearSky)
+    showBackgroundVideo(path) {
+        // return console.log(`showBackgroundVideo early return`)
+        // this.videoEl.setAttribute('src', path)
         this.videoEl.setAttribute('src', videoNightClearSky)
-        // this.videoEl.setAttribute('src', videoEveningSky)
         this.videoEl.play()
     }
 

@@ -19,7 +19,7 @@ async function init() {
         const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
 
         // rendering main block, hourly, daily, title box, and making time update every min
-        await renderAll(fetchedTimezone, fetchedWeather)  // I import it above
+        renderAll(fetchedTimezone, fetchedWeather)  // I import it above
 
         Visual.showBackgroundVideo()
 
@@ -33,6 +33,8 @@ async function init() {
         renderSunriseSunset(fetchedWeather)
 
         Visual.renderChangeLocBtn()  // rendering Change Location button
+
+        Logic.defineWeatherType()  // needed to define the bg video
 
     } catch (error) {
         console.log(error)

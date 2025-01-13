@@ -2,7 +2,7 @@ import { Logic, Visual } from '../../Controller.js'
 
 
 // main function here
-async function renderAll(fetchedTimezone, fetchedWeather) {
+function renderAll(fetchedTimezone, fetchedWeather) {
 
     // setting offset of the current timezone
     Logic.offsetInSeconds = fetchedTimezone.timezone.offset_sec
@@ -20,7 +20,7 @@ async function renderAll(fetchedTimezone, fetchedWeather) {
     const [formattedToRender, indexOfNowInHourly, todayFormatted] = renderHourly(fetchedWeather)
 
     // rendering what's above the Hourly block
-    await renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted)
+    renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted)
 }
 
 
@@ -32,6 +32,7 @@ function renderTitleBox(fetchedTimezone, fetchedWeather) {
     // rendering .time-day -- word describing what time of the day it is now
     const nowHours = new Date().getHours()
     const dayTime = Logic.defineDayTime(nowHours)
+    Logic.timeOfTheDay = dayTime   // needed to define the bg video
     Visual.renderDayTime(dayTime)
 
     // rendering .time-element & rendering .time-icon  (local time at the location) -- .time-element is where the time is, .time-icon is the icon for the current time
@@ -79,7 +80,7 @@ function renderDaily(fetchedWeather) {
 
 
 // a dependency of `renderAll`
-async function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted) {
+function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted) {
     // NOTE: 'formattedToRender' is an obj of props selected by me neatly formatted ready to render -- produced by 'renderHourly' -- each array in it has 48 elements representing 48 hours -- the 1st el at index 0 is now-hours
 
     // rendering the location and coordinates
@@ -87,6 +88,7 @@ async function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRende
 
     // rendering current air temp and weather description
     const description = Logic.getWeatherDescription(fetchedWeather.weathercode)  // getting description by weather code
+    Logic.weathercode = fetchedWeather.weathercode  // needed to define the bg video
     Visual.renderTempAndDesc(fetchedWeather.temp, description)
 
     // rendering wind
@@ -131,8 +133,8 @@ async function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRende
     // rendering the big icon 
     const nowHours = new Date().getHours()
     const dayTime = Logic.defineDayTime(nowHours)
-    const bigIcon = await Logic.defineBigIcon(fetchedWeather.weathercode, dayTime)
-    Visual.renderBigIcon(bigIcon.default)
+    const bigIconPath = Logic.defineBigIcon(fetchedWeather.weathercode, dayTime)
+    Visual.renderBigIcon(bigIconPath)
 }
 
 

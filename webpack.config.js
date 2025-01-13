@@ -27,10 +27,17 @@ module.exports = {
     module: {  
         rules: [
             {
+                test: /src_img_weather-icons.*\.js$/,  // Match files starting with 'src_img_weather-icons' and ending with .js
+                type: 'asset/resource',  // Use asset modules to handle these files
+                generator: {
+                    filename: 'assets/icons-js/[name].[hash][ext]',  // Output to assets/icons-js/ folder
+                },
+            },
+            {
                 test: /\.(mp4|webm|ogg|mov)$/,  // Adjust extensions as needed
                 type: 'asset/resource',
                 generator: {
-                    filename: 'videos/[name].[hash][ext]', // Path within dist
+                    filename: 'assets/videos/[name].[hash][ext]', // Path within dist
                 },
             },
             {
@@ -56,7 +63,14 @@ module.exports = {
                 type: 'asset/resource'
             },
             {
-                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                test: /\.svg$/,  // Match all SVG files
+                type: 'asset/resource',  // Use asset module to handle the file
+                generator: {
+                    filename: 'assets/icons/[name].[hash][ext]',  // Save them in the desired folder with a hash in the filename
+                },
+            },
+            {
+                test: /\.(png|jpg|jpeg|gif)$/i,
                 type: 'asset/resource'
             }
         ]
