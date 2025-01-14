@@ -16,10 +16,22 @@ const Visual = new View()
 
 async function init() {
     try {
+        Logic.getWeatherFetchesFromLS()
+        Logic.getTimezoneFetchesFromLS()
+
         const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
+
+        Logic.pushWeatherFetch(fetchedWeather)  // to Model
+        Logic.pushTimezoneFetch(fetchedTimezone)  // to Model
+        console.log(Logic.previousTimezoneFetches)
+        console.log(Logic.previousWeatherFetches)
+        Logic.pushWeatherFetchesToLS()
+        Logic.pushTimezoneFetchesToLS()
 
         // rendering main block, hourly, daily, title box, and making time update every min
         renderAll(fetchedTimezone, fetchedWeather)  // I import it above
+
+        Logic.setAllDegrees(fetchedWeather)  // converting from C to F -- as a result of that we have two arrays -- all Celsius values and all Fahrenheit values
 
         // Visual.showBackgroundVideo()
 
@@ -39,6 +51,8 @@ async function init() {
 
         // Visual.blinkInterface()
         // Visual.glowInterface()
+
+        runEventListeners()
 
     } catch (error) {
         console.log(error)
@@ -83,6 +97,23 @@ function logOutTimeNow() {
     setInterval(() => {
         console.log(`⏰ ${new Date().getHours()}:${(new Date().getMinutes()).toString().padStart(2,0)}`)
     }, 60000);
+}
+
+// ===========================================================================================================================
+
+function runEventListeners() {
+    Visual.handleTemperatureClick(changeTempUnits)
+}
+
+// ===========================================================================================================================
+
+function changeTempUnits() {
+    const unitsNow = Logic.switchTempUnits()
+    if(unitsNow === 'Fahrenheit') {
+        Visual.rerenderDegrees('Fahrenheit', Logic.degreesFahrenheit)
+    } else {
+        Visual.rerenderDegrees('Celsius', Logic.degrees)
+    }
 }
 
 // ===========================================================================================================================

@@ -2,6 +2,7 @@ import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, tim
 
 class View {
     constructor() {
+        this.weatherBoxEl = document.querySelector('.weather')
         this.locationEl = document.querySelector('.weather__place')
         this.coordsEl = document.querySelector('.weather__coords')
         this.timeEl = document.querySelector('.time-element')
@@ -427,6 +428,65 @@ class View {
     }
 
     // ================================================================================================
+
+    handleTemperatureClick(handler) {
+        this.weatherBoxEl.addEventListener('click', function(e) {
+            if(!e.target.closest('.weather__temp') && !e.target.closest('.weather__day-temp') && !e.target.closest('.weather__hour-temp')) return  
+            handler()
+        })
+    }
+
+    // ================================================================================================
+
+    showError() {
+        const div = document.createElement('div')
+        div.classList.add('error', 'message-error')
+        div.innerHTML = `<div><span>Sorry, some error happened... Cannot show the weather now.</span><span>Try again later.</span></div>`
+        document.body.appendChild(div)
+    }
+
+    // ================================================================================================
+
+    rerenderDegrees(flag, obj) {
+        const allHourlyTemps = [...document.querySelectorAll('.weather__hour-temp')]
+        const allDailyTemps = [...document.querySelectorAll('.weather__day-temp')]
+        const getHourlyTempHtml = (sign, usual, feels) => `${usual}${sign} <span title="Feels like">(${feels}${sign})</span>`
+        const getDailyTempHtml = (sign, usualMin, usualMax, feelsMin, feelsMax) => `${usualMin}-${usualMax}${sign} <span>(${feelsMin}-${feelsMax}${sign})</span>`
+
+        if(flag==='Fahrenheit') {   // setting Fahrenheit
+            this.airTempEl.innerHTML = `${obj.tempNow}${this.fahrenheitSign}`   // setting the big degrees element
+            this.feelsLikeEl.innerHTML = `Feels like ${obj.feelsLike}${this.fahrenheitSign}`   // setting the Feels like under it
+            allHourlyTemps.forEach((hourlyTempEl, i) => {   // setting all Hourly degrees
+                const usual = obj.hourly[i][0]
+                const feels = obj.hourly[i][1]
+                hourlyTempEl.innerHTML = getHourlyTempHtml(this.fahrenheitSign, usual, feels)
+            })
+            allDailyTemps.forEach((dailyTempEl, i) => {    // setting all Daily degrees
+                const usualMin = obj.daily[i][0]
+                const usualMax = obj.daily[i][1]
+                const feelsMin = obj.daily[i][2]
+                const feelsMax = obj.daily[i][3]
+                dailyTempEl.innerHTML = getDailyTempHtml(this.fahrenheitSign, usualMin, usualMax, feelsMin, feelsMax)
+            })
+        } 
+        
+        else {   // setting Celsius
+            this.airTempEl.innerHTML = `${Math.floor(obj.tempNow)}${this.celsiusSign}`
+            this.feelsLikeEl.innerHTML = `Feels like ${Math.floor(obj.feelsLike)}${this.celsiusSign}`
+            allHourlyTemps.forEach((hourlyTempEl, i) => {  
+                const usual = Math.floor(obj.hourly[i][0])
+                const feels = Math.floor(obj.hourly[i][1])
+                hourlyTempEl.innerHTML = getHourlyTempHtml(this.celsiusSign, usual, feels)
+            })
+            allDailyTemps.forEach((dailyTempEl, i) => {    
+                const usualMin = Math.floor(obj.daily[i][0])
+                const usualMax = Math.floor(obj.daily[i][1])
+                const feelsMin = Math.floor(obj.daily[i][2])
+                const feelsMax = Math.floor(obj.daily[i][3])
+                dailyTempEl.innerHTML = getDailyTempHtml(this.celsiusSign, usualMin, usualMax, feelsMin, feelsMax)
+            })
+        }
+    }
 
 }
 

@@ -38,6 +38,8 @@ async function fetchWeather(coordsArr) {
         return myObj
     } catch (error) {
         console.log(error)
+        Visual.toggleSpinner('hide')
+        Visual.showError()
     }
 }
 
@@ -59,7 +61,12 @@ async function fetchTimezone(coordsArr) {
             flag: data.results[0].annotations.flag,
             sun: data.results[0].annotations.sun,
             timezone: data.results[0].annotations.timezone,
-            coords: data.results[0].geometry
+            coords: data.results[0].geometry,
+            fetchedAt: {
+                fullTime: new Date(),
+                hoursMinutes: `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`,
+                date: `${new Date().getDate().toString().padStart(2,0)}/${(new Date().getMonth()+1).toString().padStart(2,0)}/${new Date().getFullYear()}`
+            }
         }
         return myObj
     } catch (error) {

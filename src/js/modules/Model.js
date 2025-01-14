@@ -12,6 +12,19 @@ class Model {
         this.sunsetTime = 0
         this.timeOfTheDay = ''
         this.weathercode = 0
+        this.tempUnits = 'Celsius'
+        this.previousWeatherFetches = []
+        this.previousTimezoneFetches = []
+        this.degrees = {}
+        this.degreesFahrenheit = {}
+    }
+
+    // ================================================================================================
+
+    switchTempUnits() {
+        if(this.tempUnits === 'Celsius') this.tempUnits = 'Fahrenheit'
+        else this.tempUnits = 'Celsius'
+        return this.tempUnits
     }
 
     // ================================================================================================
@@ -22,7 +35,7 @@ class Model {
         this.sunriseTime = `${hours}:${minutes}`
         console.log(`sunrise today:`, this.sunriseTime)
     }
-    
+
     // ================================================================================================
     
     setSunsetTime(value) {
@@ -185,6 +198,128 @@ class Model {
     // needed to define the bg video
     defineWeatherType() {
         return defineWeatherType(this.timeOfTheDay, this.weathercode);  // I import it above
+    }
+
+    // ================================================================================================
+
+    convertTempUnits(value, flag) {
+        if(flag === 'toFahrenheit') {
+            return (value * 9/5) + 32
+        } else { // to Celsius
+            return (value - 32) * 5/9
+        }
+    }
+
+    // ================================================================================================
+
+    pushWeatherFetch(value) {
+        this.previousWeatherFetches.push(value)
+    }
+
+    // ================================================================================================
+
+    pushTimezoneFetch(value) {
+        this.previousTimezoneFetches.push(value)
+    }
+
+    // ================================================================================================
+
+    pushToLocalStorage(value, key) {
+        localStorage.setItem(key, value)
+    }
+
+    // ================================================================================================
+
+    pushWeatherFetchesToLS() {
+        const weather = JSON.stringify(this.previousWeatherFetches)
+        this.pushToLocalStorage(weather, 'weatherFetches')
+    }
+
+    // ================================================================================================
+
+    pushTimezoneFetchesToLS() {
+        const timezone = JSON.stringify(this.previousTimezoneFetches)
+        this.pushToLocalStorage(timezone, 'timezoneFetches')
+    }
+
+    // ================================================================================================
+
+    getWeatherFetchesFromLS() {
+        const fetch = localStorage.getItem('weatherFetches')
+        if (fetch) {
+            this.previousWeatherFetches = JSON.parse(fetch)
+        }
+    }
+
+    // ================================================================================================
+
+    getTimezoneFetchesFromLS() {
+        const fetch = localStorage.getItem('timezoneFetches')
+        if (fetch) {
+            this.previousTimezoneFetches = JSON.parse(fetch)
+        }
+    }
+
+    // ================================================================================================
+
+    setAllDegrees(fetchedWeather) {
+        console.log(fetchedWeather)
+        this.getObjectOfDegrees(fetchedWeather)  // gets you an object of all degree values that are in the UI now (main, feels like, in hourly and daily), based on the fetch response
+
+        // setting Fahrenheit values:
+        this.degreesFahrenheit.tempNow = Math.floor(this.convertTempUnits(this.degrees.tempNow, 'toFahrenheit'))
+        this.degreesFahrenheit.feelsLike = Math.floor(this.convertTempUnits(this.degrees.feelsLike, 'toFahrenheit'))
+        this.degreesFahrenheit.hourly = this.degrees.hourly.map(arr => {
+            const val1 = Math.floor(this.convertTempUnits(arr[0], 'toFahrenheit'))
+            const val2 = Math.floor(this.convertTempUnits(arr[1], 'toFahrenheit'))
+            return [val1, val2]
+        })
+        this.degreesFahrenheit.daily = this.degrees.daily.map(arr => {
+            const val1 = Math.floor(this.convertTempUnits(arr[0], 'toFahrenheit'))
+            const val2 = Math.floor(this.convertTempUnits(arr[1], 'toFahrenheit'))
+            const val3 = Math.floor(this.convertTempUnits(arr[2], 'toFahrenheit'))
+            const val4 = Math.floor(this.convertTempUnits(arr[3], 'toFahrenheit'))
+            return [val1, val2, val3, val4]
+        })
+        
+        // this.degreesFahrenheit  is an arr of Fahrenheit values to render
+        // this.degrees  is an arr of Celsius values to render
+    }
+
+    // ================================================================================================
+
+    // gets you an object of all degree values that are in the UI now (main, feels like, in hourly and daily) -- based on the fetch response
+    getObjectOfDegrees(fetchedWeather) {
+        this.degrees.tempNow = fetchedWeather.temp
+        
+        const today = this.getTodayString()
+        const now = this.getNowTime()
+        const nowString = `${today}T0${now}`.split(':')[0]
+        let indexInHourly = fetchedWeather.hourly.time.findIndex(x => x.startsWith(nowString))
+
+        this.degrees.feelsLike = fetchedWeather.hourly.apparent_temperature[indexInHourly]
+        this.degrees.hourly = []
+        this.degrees.daily = []
+
+        // pushing Hourly's (6 for 6 hours)
+        for (let i = 0; i < 6; i++) {
+            const tempMain = fetchedWeather.hourly.temperature_2m[indexInHourly]
+            const tempFeelsLike = fetchedWeather.hourly.apparent_temperature[indexInHourly]
+            this.degrees.hourly.push([tempMain, tempFeelsLike])
+            indexInHourly += 1
+        }
+        
+        // pushing Daily's (3 for 3 days)
+        let indexOfDaily = fetchedWeather.daily.time.findIndex(x => x === today)
+
+        for (let i = 0; i < 3; i++) {
+            indexOfDaily += 1
+            const feelsLikeMin = fetchedWeather.daily.apparent_temperature_min[indexOfDaily]
+            const feelsLikeMax = fetchedWeather.daily.apparent_temperature_max[indexOfDaily]
+            const mainTempMin = fetchedWeather.daily.temperature_2m_min[indexOfDaily]
+            const mainTempMax = fetchedWeather.daily.temperature_2m_max[indexOfDaily]
+            this.degrees.daily.push([mainTempMin, mainTempMax, feelsLikeMin, feelsLikeMax])
+        }
     }
 
 }
