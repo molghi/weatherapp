@@ -37,6 +37,9 @@ async function init() {
         const bgVideoPath = Logic.defineWeatherType()  // needed to define the bg video
         Visual.showBackgroundVideo(bgVideoPath)
 
+        // Visual.blinkInterface()
+        // Visual.glowInterface()
+
     } catch (error) {
         console.log(error)
     }

@@ -147,6 +147,7 @@ class View {
 
     showBackgroundVideo(path) {
         this.videoBoxEl.style.animation = 'fadein 5s linear'
+        this.filterVideo('default') // reset video filters
         this.videoEl.pause(); // Pause current video
         this.videoEl.setAttribute('src', path)
         this.videoEl.currentTime = 0; // Start from the beginning
@@ -167,7 +168,7 @@ class View {
 
     filterVideo(flag) {
         if(flag==='reset' || flag==='default') {
-            return this.videoEl.style.filter = 'none'
+            return this.videoEl.style.filter = 'brightness(0.3) blur(1px)'
         }
     }
 
@@ -350,6 +351,79 @@ class View {
 
     renderChangeLocBtn() {
         this.changeLocBtnBoxEl.innerHTML = `<button class="change-location-btn">Change Location</button>`
+    }
+
+    // ================================================================================================
+
+    blinkInterface() {
+        const periodicity = 2*60*1000
+        const everyElInTop = document.querySelectorAll('.weather__top > div')
+
+        const weatherBox = document.querySelector('.weather')
+        const locationLine = document.querySelector('.weather__location')
+        const precipitationLine = document.querySelector('.weather__precipitation')
+        const windLine = document.querySelector('.weather__wind')
+        const cloudCoverLine = document.querySelector('.weather__cloud-cover')
+        const uvLine = document.querySelector('.weather__uv')
+        const lightLine = document.querySelector('.weather__light')
+        const humidityLine = document.querySelector('.weather__humidity')
+        const sunLine = document.querySelector('.weather__sun')
+        const everyElInMedium = [locationLine, precipitationLine, windLine, cloudCoverLine, uvLine, lightLine, humidityLine, sunLine]
+        const everyHourly = document.querySelectorAll('.weather__hour')
+        const everyDaily = document.querySelectorAll('.weather__day')
+
+        setTimeout(() => {
+            // weatherBox.style.animation = 'blink 1.5s steps(1, end)'
+            weatherBox.style.animation = 'blink-pulse 1s linear'
+            // weatherBox.style.animation = 'blink 1.25s ease-in-out'
+            setTimeout(() => {
+                weatherBox.style.animation = 'initial'
+            }, 2000);    
+        }, 3000);
+
+        return
+        
+        const arrayOfAll = [...everyElInTop, ...everyElInMedium]
+
+        // blinking: everyElInTop and everyElInMedium
+        setTimeout(() => {
+            arrayOfAll.forEach((el, i) => {
+                // blink .5s steps(1, end) .1s
+                el.style.animation = `blink .5s steps(1, end) .${i+1}s`
+                setTimeout(() => {
+                    el.style.animation = `initial`
+                }, 2000);
+            })
+        }, 1000);
+
+        // blinking hourly
+        setTimeout(() => {
+            everyHourly.forEach((el, i) => {
+                el.style.animation = `blink .5s steps(1, end) .${i+1}s`
+                setTimeout(() => {
+                    el.style.animation = `initial`
+                }, 2000);
+            })
+        }, 1700);
+
+        // blinking daily
+        setTimeout(() => {
+            everyDaily.forEach((el, i) => {
+                el.style.animation = `blink .5s steps(1, end) .${i+1}s`
+                setTimeout(() => {
+                    el.style.animation = `initial`
+                }, 2000);
+            })
+        }, 2200);
+    }
+
+    // ================================================================================================
+
+    glowInterface() {
+        // return
+        setTimeout(() => {
+            document.body.style.animation = 'glow 2s linear'
+        }, 3000);
     }
 
     // ================================================================================================

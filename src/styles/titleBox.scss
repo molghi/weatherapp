@@ -28,7 +28,7 @@
 
     /* Sway left */
     15% {
-        transform: rotate(20deg);
+        transform: rotate(30deg);
     }
 
     /* Sway right */
@@ -88,7 +88,7 @@
 
     .time-icon {
         // display: inline-block;
-        animation: move-and-rest 10s ease-in-out infinite;
+        animation: move-and-rest 10s ease-in-out 5s infinite;
     }
 
     .sun-box {
