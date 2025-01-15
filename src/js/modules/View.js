@@ -63,26 +63,31 @@ class View {
     // ================================================================================================
 
     // rendering .time-element
-    renderTimeElement(timeArr) {
+    renderTimeElement(dateTodayFormatted, timeArr) {
         let [hours, minutes] = timeArr
-        const dateTodayFormatted = `${new Date().getDate().toString().padStart(2,0)}/${(new Date().getMonth()+1).toString().padStart(2,0)}/${new Date().getFullYear()}`
+        // dateTodayFormatted = `${new Date().getDate().toString().padStart(2,0)}/${(new Date().getMonth()+1).toString().padStart(2,0)}/${new Date().getFullYear()}`
         const minutesFormatted = minutes.toString().padStart(2,0)
         if(hours>=24) hours -= 0
         this.timeEl.innerHTML = `${hours}<span>:</span>${minutesFormatted}`
-        this.timeEl.setAttribute('title', `${dateTodayFormatted}  ̶ ${hours}:${minutesFormatted}`)
+        this.timeEl.setAttribute('title', `Location date-time: ${dateTodayFormatted}  ̶ ${hours}:${minutesFormatted}`)
     }
 
     // ================================================================================================
 
     // rendering .sun-time
-    renderSunrise(time) {
+    renderSuntime(time, type='sunrise', actualTime='') {   // 'time' is an array, 'type' is a string
         const [hours, minutes] = time
         if(hours > 1) this.suntimeEl.innerHTML = `in ${hours} hours`;
         else if(hours === 1) this.suntimeEl.innerHTML = `in ${hours} hour`;
         else if(hours === 0 && minutes === 1) this.suntimeEl.innerHTML = `in ${minutes} minute`;
         else this.suntimeEl.innerHTML = `in ${minutes} minutes`;
 
-        this.sunwordEl.innerHTML = `Sunrise:`
+        if(actualTime.startsWith('0')) actualTime = actualTime.replace('0', '');
+        this.suntimeEl.setAttribute('title', `At ${actualTime}`);
+
+        if(type==='sunset') {
+            this.sunwordEl.innerHTML = `Sunset:`
+        } else this.sunwordEl.innerHTML = `Sunrise:`
 
         // const word = time > 15 ? 'minutes' : 'hours'
         // this.suntimeEl.innerHTML = `in ${time} ${word}`
@@ -140,7 +145,7 @@ class View {
     // rendering .weather__updated-time
     renderUpdatedAt(timeString, dateString) {
         this.updatedAtEl.innerHTML = timeString
-        this.updatedAtEl.setAttribute('title', `${dateString} at ${timeString}`)
+        this.updatedAtEl.setAttribute('title', `Updated at ${dateString} at ${timeString} (local time)`)
         this.updatedTitleEl.innerHTML = `Updated at`
     }
 
@@ -160,7 +165,8 @@ class View {
         this.videoEl.play().catch((error) => {
             console.log('Error playing bg video:', error);
             // Fallback to default video if needed
-            this.videoEl.setAttribute('src', 'assets/videos/night-smoke.mp4');
+            // this.videoEl.setAttribute('src', 'assets/videos/night-smoke.mp4');
+            this.videoEl.setAttribute('src', 'assets/videos/foggy-forest-2.mp4');
             this.videoEl.play();
         })
     }
@@ -204,10 +210,11 @@ class View {
         }
         let toRender = `<span title="Precipitation probability">${precipitationProbability}%</span>`
         if(precipitation === 0 && precipitationProbability === 0) toRender += `, ${valuesMap.mm0}`;
-        if(precipitation < 1) toRender += `, ${valuesMap.mm05}`;
+        if(precipitation > 0 && precipitation < 1) toRender += `, ${valuesMap.mm05}`;
         if(precipitation >= 1 && precipitation < 5) toRender += `, ${valuesMap.mm1}`;
         if(precipitation >= 5 && precipitation < 15) toRender += `, ${valuesMap.mm5}`;
         if(precipitation >= 15) toRender += `, ${valuesMap.mm15}`;
+        
         this.precipitationEl.innerHTML = toRender
 
         this.precipitationTitleEl.innerHTML = `Precipitation:`
@@ -252,10 +259,9 @@ class View {
     // ================================================================================================
 
     // rendering .weather__days
-    renderDaily(obj) {
+    renderDaily(dateNowAtLocation, obj) {
         const amountOfDayItems = 3 // how many of such items in the UI to render
-        const todayFormatted = `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
-        let indexOfToday = obj.time.findIndex(x => x === todayFormatted)  // decrementing because we're incrementing it in the loop below
+        let indexOfToday = obj.time.findIndex(x => x === dateNowAtLocation)  // decrementing because we're incrementing it in the loop below
 
         // iterating and creating a long string of new elements to render
         const elementsToRender = obj.time.map((el, index) => {    // all of those arrays (like 'time' in 'obj') have the same length
@@ -292,7 +298,7 @@ class View {
 
         return `<div class="weather__day">
                     <div class="weather__day-name">${dayNames[index]} (${dateFormatted})</div>
-                    <div class="weather__day-temp">${tempMin}-${tempMax}°C <span>(${tempFeelLikeMin}-${tempFeelLikeMax}°C)</span></div>
+                    <div class="weather__day-temp">${tempMin} - ${tempMax}°C &nbsp;<span>(${tempFeelLikeMin} - ${tempFeelLikeMax}°C)</span></div>
                     <div class="weather__day-description" title="${desc}">${desc}</div>
 
                     <div class="weather__day-line">
@@ -451,7 +457,7 @@ class View {
         const allHourlyTemps = [...document.querySelectorAll('.weather__hour-temp')]
         const allDailyTemps = [...document.querySelectorAll('.weather__day-temp')]
         const getHourlyTempHtml = (sign, usual, feels) => `${usual}${sign} <span title="Feels like">(${feels}${sign})</span>`
-        const getDailyTempHtml = (sign, usualMin, usualMax, feelsMin, feelsMax) => `${usualMin}-${usualMax}${sign} <span>(${feelsMin}-${feelsMax}${sign})</span>`
+        const getDailyTempHtml = (sign, usualMin, usualMax, feelsMin, feelsMax) => `${usualMin} - ${usualMax}${sign} &nbsp;<span>(${feelsMin} - ${feelsMax}${sign})</span>`
 
         if(flag==='Fahrenheit') {   // setting Fahrenheit
             this.airTempEl.innerHTML = `${obj.tempNow}${this.fahrenheitSign}`   // setting the big degrees element
@@ -485,6 +491,31 @@ class View {
                 const feelsMax = Math.floor(obj.daily[i][3])
                 dailyTempEl.innerHTML = getDailyTempHtml(this.celsiusSign, usualMin, usualMax, feelsMin, feelsMax)
             })
+        }
+    }
+
+    // ================================================================================================
+
+    promptGeolocation() {
+        if (navigator.geolocation) {  // checks whether the Geolocation API is supported by the user's browser
+            navigator.geolocation.getCurrentPosition(     // navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options)
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    console.log(`Geoloc fetch success: Latitude: ${lat}, Longitude: ${lng}`);
+                    return [lat, lng]
+                },
+                (error) => {
+                    console.error(`Error (${error.code}): ${error.message}`);
+                },
+                {
+                    enableHighAccuracy: true,  // Requests more precise location information (e.g., GPS instead of Wi-Fi or cell tower data)
+                    timeout: 10000,  // Specifies the maximum time (in milliseconds) the device will wait to retrieve the location. If the specified time elapses without success, the errorCallback is invoked with a timeout error.
+                    maximumAge: 0,  // Determines the maximum age (in milliseconds) of cached location data. 0 means always fetch fresh data rather than using cached results.
+                }
+            );
+        } else {
+            console.error("Geolocation is not supported by this browser.");
         }
     }
 

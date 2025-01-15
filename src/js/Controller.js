@@ -19,12 +19,15 @@ async function init() {
         Logic.getWeatherFetchesFromLS()
         Logic.getTimezoneFetchesFromLS()
 
+        const userGeolocationCoords = Visual.promptGeolocation()
+        console.log(`userGeolocationCoords:`, userGeolocationCoords)
+
         const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
 
         Logic.pushWeatherFetch(fetchedWeather)  // to Model
         Logic.pushTimezoneFetch(fetchedTimezone)  // to Model
-        console.log(Logic.previousTimezoneFetches)
-        console.log(Logic.previousWeatherFetches)
+        // console.log(Logic.previousTimezoneFetches)
+        // console.log(Logic.previousWeatherFetches)
         Logic.pushWeatherFetchesToLS()
         Logic.pushTimezoneFetchesToLS()
 

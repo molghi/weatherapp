@@ -7,10 +7,25 @@ import defineWeatherType from './model-dependencies/defineWeatherType.js';
 class Model {
     #state = {}
     constructor() {
-        this.myCoords = [41.0082, 28.9784]  // lat & long of Istanbul
+        this.myCoords = [41.0082, 28.9784]  // Istanbul
+        // this.myCoords = [52.5200, 13.4050] // Berlin
+        // this.myCoords = [48.8566, 2.3522] // Paris
+        // this.myCoords = [51.5074, -0.1278] // London
+        // this.myCoords = [40.7128, -74.0060] // New York
+        // this.myCoords = [64.1355, -21.8954] // Reykjavik
+        // this.myCoords = [-33.8688, 151.2093] // Sydney
+        // this.myCoords = [22.3193, 114.1694] // Hong Kong
+        // this.myCoords = [23.5859, 58.4059] // Muscat
+        // this.myCoords = [30.0444, 31.2357] // Cairo
+        // this.myCoords = [24.7136, 46.6753] // Riyadh
+        // this.myCoords = [68.9585, 33.0827] // Murmansk
+        // this.myCoords = [64.5399, 40.5152] // Arkhangelsk
+
         this.sunriseTime = 0
+        this.offsetInSeconds = 0
         this.sunsetTime = 0
         this.timeOfTheDay = ''
+        this.timeNow = ''
         this.weathercode = 0
         this.tempUnits = 'Celsius'
         this.previousWeatherFetches = []
@@ -29,20 +44,29 @@ class Model {
 
     // ================================================================================================
 
+    convertToCorrectTime(dateTimeStr) {     // returns "HH:mm"
+        const time = new Date(dateTimeStr)
+        time.setSeconds(time.getSeconds() + this.offsetInSeconds);
+        return time.toISOString().slice(11, 16);
+    }
+
+    // ================================================================================================
+
     setSunriseTime(value) {
-        const hours = new Date(value).getHours()
-        const minutes = new Date(value).getMinutes()
-        this.sunriseTime = `${hours}:${minutes}`
-        console.log(`sunrise today:`, this.sunriseTime)
+        // console.log(value)
+        this.sunriseTime = this.convertToCorrectTime(value)
+        // const hours = new Date(value).getHours()
+        // const minutes = new Date(value).getMinutes()
+        // this.sunriseTime = `${hours}:${minutes}`
     }
 
     // ================================================================================================
     
     setSunsetTime(value) {
-        const hours = new Date(value).getHours()
-        const minutes = new Date(value).getMinutes()
-        this.sunsetTime = `${hours}:${minutes}`
-        console.log(`sunset today:`, this.sunsetTime)
+        this.sunsetTime = this.convertToCorrectTime(value)
+        // const hours = new Date(value).getHours()
+        // const minutes = new Date(value).getMinutes()
+        // this.sunsetTime = `${hours}:${minutes}`
     }
 
     // ================================================================================================
@@ -96,7 +120,27 @@ class Model {
             adjustedHours += 24
         }
 
+        this.timeOfTheDay = this.defineDayTime(adjustedHours)
+
         return [adjustedHours, adjustedMinutes]
+    }
+
+    // ================================================================================================
+
+    getLocalDay(offsetInSec) {
+        const nowUTC = new Date();
+        const utcTimestamp = nowUTC.getTime();  // Get the current UTC time in milliseconds
+        
+        const localTimestamp = utcTimestamp + offsetInSec * 1000;  // Calculate the local timestamp
+        
+        const localDate = new Date(localTimestamp);  // Create a Date object for the local time
+
+        // Extract the day, month, and year based on local time
+        const day = localDate.getUTCDate();
+        const month = localDate.getUTCMonth() + 1;  
+        const year = localDate.getUTCFullYear();
+        
+        return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`
     }
 
     // ================================================================================================
@@ -105,6 +149,25 @@ class Model {
         const sunriseMs = time
         const nowMs = Date.now()
         const differenceInMin = Math.floor((sunriseMs - nowMs)/1000/60)
+        let hours = Math.trunc(differenceInMin/60)
+        const minutes = differenceInMin%60
+        if (hours >= 24) {
+            hours -= 24
+        } else if (hours < 0) {
+            hours += 24
+        }
+        return [hours, minutes]
+    }
+
+    // ================================================================================================
+
+    calcSunset(nowTimeString, sunsetTimeString) {
+        const now = new Date()
+        const padIt = val => val.toString().padStart(2,0)
+        const prefix = `${now.getFullYear()}-${padIt(now.getMonth()+1)}-${padIt(now.getDate())}`
+        const nowTime = new Date(`${prefix}T${nowTimeString}`).getTime()
+        const sunsetTime = new Date(`${prefix}T${sunsetTimeString}`).getTime()
+        const differenceInMin = Math.floor((sunsetTime - nowTime)/1000/60)
         let hours = Math.trunc(differenceInMin/60)
         const minutes = differenceInMin%60
         if (hours >= 24) {
@@ -138,8 +201,8 @@ class Model {
 
     defineDayTime(nowHours) {
         if(nowHours>=18  && nowHours <=23) return 'Evening'
-        else if(nowHours>=0  && nowHours <8) return 'Night'
-        else if(nowHours>=8  && nowHours <12) return 'Morning'
+        else if(nowHours>=0  && nowHours <6) return 'Night'
+        else if(nowHours>=6  && nowHours <12) return 'Morning'
         else return 'Day'
     }
 
@@ -174,13 +237,14 @@ class Model {
 
     // formatting the obj that I am passing here in a neat, ready-to-be-rendered format
     formatDaily(obj) {
+        console.log(obj)
         const myObj = JSON.parse(JSON.stringify(obj))
         myObj.apparent_temperature_max = myObj.apparent_temperature_max.map(temp => Math.floor(temp))
         myObj.apparent_temperature_min = myObj.apparent_temperature_min.map(temp => Math.floor(temp))
         myObj.daylight_duration = myObj.daylight_duration.map(durInSec => `${Math.trunc(durInSec/3600)} ${Math.floor((durInSec % 3600) / 60)}`)
         myObj.sunshine_duration = myObj.sunshine_duration.map(durInSec => `${Math.trunc(durInSec/3600)} ${Math.floor((durInSec % 3600) / 60)}`)
-        myObj.sunrise = myObj.sunrise.map(sunriseStr => `${new Date(sunriseStr).getHours()}:${new Date(sunriseStr).getMinutes().toString().padStart(2,0)}`)
-        myObj.sunset = myObj.sunset.map(sunsetStr => `${new Date(sunsetStr).getHours()}:${new Date(sunsetStr).getMinutes().toString().padStart(2,0)}`)
+        myObj.sunrise = this.returnCorrectSuntimes(myObj.sunrise)
+        myObj.sunset = this.returnCorrectSuntimes(myObj.sunset)
         myObj.weathercodes = myObj.weather_code.map(code => this.getWeatherDescription(code))
         myObj.temperature_2m_max = myObj.temperature_2m_max.map(temp => Math.floor(temp))
         myObj.temperature_2m_min = myObj.temperature_2m_min.map(temp => Math.floor(temp))
@@ -191,6 +255,19 @@ class Model {
         delete myObj.weather_code
 
         return myObj
+    }
+
+    // ================================================================================================
+
+    returnCorrectSuntimes(arr) {
+        const newArr = arr.map(dateTimeStr => {
+            const time = new Date(dateTimeStr)
+            time.setSeconds(time.getSeconds() + this.offsetInSeconds);
+            let string = time.toISOString().slice(11, 16);
+            if(string.startsWith('0')) string = string.replace('0', '');
+            return string;
+        })
+        return newArr 
     }
 
     // ================================================================================================
@@ -263,7 +340,6 @@ class Model {
     // ================================================================================================
 
     setAllDegrees(fetchedWeather) {
-        console.log(fetchedWeather)
         this.getObjectOfDegrees(fetchedWeather)  // gets you an object of all degree values that are in the UI now (main, feels like, in hourly and daily), based on the fetch response
 
         // setting Fahrenheit values:
@@ -293,10 +369,10 @@ class Model {
         this.degrees.tempNow = fetchedWeather.temp
         
         const today = this.getTodayString()
-        const now = this.getNowTime()
-        const nowString = `${today}T0${now}`.split(':')[0]
+        let now = this.getNowTime()
+        if(new Date().getHours() < 10) now = '0' + now
+        const nowString = `${today}T${now}`.split(':')[0]
         let indexInHourly = fetchedWeather.hourly.time.findIndex(x => x.startsWith(nowString))
-
         this.degrees.feelsLike = fetchedWeather.hourly.apparent_temperature[indexInHourly]
         this.degrees.hourly = []
         this.degrees.daily = []

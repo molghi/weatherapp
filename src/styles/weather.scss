@@ -613,6 +613,9 @@
     &__day-temp {
         margin-bottom: 5px;
         cursor: pointer;
+        span {
+            opacity: 0.5;
+        }
     }
 
     &__day-description {
