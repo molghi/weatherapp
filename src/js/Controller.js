@@ -18,47 +18,28 @@ async function init() {
     try {
         Logic.getWeatherFetchesFromLS()
         Logic.getTimezoneFetchesFromLS()
+        Logic.getCoordsFetchesFromLS()
 
-        const userGeolocationCoords = Visual.promptGeolocation()
-        console.log(`userGeolocationCoords:`, userGeolocationCoords)
+        // Using Browser Geolocation API to determine a user's position
+        Visual.toggleSpinner('show')
+        const userGeolocCoords = await Visual.promptGeolocation()   // userGeolocationCoords is an array
+        // console.log(`userGeolocCoords:`, userGeolocCoords)
+        Visual.toggleSpinner('hide')
+        Logic.pushFetchedCoords(userGeolocCoords)
 
-        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
+        // const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
+        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(userGeolocCoords, userGeolocCoords)
 
-        Logic.pushWeatherFetch(fetchedWeather)  // to Model
-        Logic.pushTimezoneFetch(fetchedTimezone)  // to Model
-        // console.log(Logic.previousTimezoneFetches)
-        // console.log(Logic.previousWeatherFetches)
-        Logic.pushWeatherFetchesToLS()
-        Logic.pushTimezoneFetchesToLS()
+        // a sequence of actions that happen after fetching, such as rendering and updating things:
+        afterFetching(fetchedWeather, fetchedTimezone)
 
-        // rendering main block, hourly, daily, title box, and making time update every min
-        renderAll(fetchedTimezone, fetchedWeather)  // I import it above
-
-        Logic.setAllDegrees(fetchedWeather)  // converting from C to F -- as a result of that we have two arrays -- all Celsius values and all Fahrenheit values
-
-        // Visual.showBackgroundVideo()
-
-        logOutTimeNow()
-
-        // setting sunrise and sunset time
-        const todayString = Logic.getTodayString()  // formatted like '2025-01-11'
-        const indexOfTodayInDaily = fetchedWeather.daily.sunset.findIndex(x => x.startsWith(todayString))
-        Logic.setSunriseTime(fetchedWeather.daily.sunrise[indexOfTodayInDaily])
-        Logic.setSunsetTime(fetchedWeather.daily.sunset[indexOfTodayInDaily])
-        renderSunriseSunset(fetchedWeather)
-
-        Visual.renderChangeLocBtn()  // rendering Change Location button
-
-        const bgVideoPath = Logic.defineWeatherType()  // needed to define the bg video
-        Visual.showBackgroundVideo(bgVideoPath)
-
-        // Visual.blinkInterface()
-        // Visual.glowInterface()
-
+        // running all event listeners
         runEventListeners()
 
     } catch (error) {
-        console.log(error)
+        console.error(`Failed to fetch geolocation: ${error.message}`);
+        Visual.toggleSpinner('hide')
+        Visual.showError('Temporary error: Geoloc denied --> (this is where I must show the input field so the user could choose a city)')
     }
 }
 init()
@@ -89,7 +70,7 @@ async function fetchTimezoneAndWeather(timezoneCoords, weatherCoords) {
 
         return [fetchedTimezone, fetchedWeather]
     } catch (error) {
-        console.log(error)
+        console.error(error)
     }
 }
 
@@ -120,6 +101,51 @@ function changeTempUnits() {
 }
 
 // ===========================================================================================================================
+
+function pushFetchesToModelAndLs(fetchedWeather, fetchedTimezone) {
+    Logic.pushWeatherFetch(fetchedWeather)  // to Model
+    Logic.pushTimezoneFetch(fetchedTimezone)  // to Model
+    Logic.pushWeatherFetchesToLS()
+    Logic.pushTimezoneFetchesToLS()
+}
+
+// ===========================================================================================================================
+
+function afterFetching(fetchedWeather, fetchedTimezone) {
+    // pushing fetches to Model and LS
+    pushFetchesToModelAndLs(fetchedWeather, fetchedTimezone)
+
+    // pushing fetched user coords to LS
+    Logic.pushToLocalStorage(JSON.stringify(Logic.fetchedCoords), 'userCoords')
+
+    // rendering main block, hourly, daily, title box, and making time update every min
+    renderAll(fetchedTimezone, fetchedWeather)  // I import it above
+
+    // converting from C to F -- as a result of that we have two arrays -- all Celsius values and all Fahrenheit values
+    Logic.setAllDegrees(fetchedWeather)  
+
+    // updating Document Title
+    const shortDescription = Logic.giveShortDescription(fetchedWeather.weathercode)
+    Visual.updateDocumentTitle(Math.floor(fetchedWeather.temp), shortDescription)
+
+    // why not?
+    logOutTimeNow()
+
+    // setting sunrise and sunset time
+    const todayString = Logic.getLocalDay(Logic.offsetInSeconds).split('/').reverse().join('-')  // formatted like '2025-01-11'
+    const indexOfTodayInDaily = fetchedWeather.daily.sunset.findIndex(x => x.startsWith(todayString))
+    Logic.setSunriseTime(fetchedWeather.daily.sunrise[indexOfTodayInDaily])
+    Logic.setSunsetTime(fetchedWeather.daily.sunset[indexOfTodayInDaily])
+    renderSunriseSunset(fetchedWeather)
+
+    // rendering Change Location button
+    Visual.renderChangeLocBtn()  
+
+    // putting the bg video there
+    const bgVideoPath = Logic.defineWeatherType()  
+    Visual.showBackgroundVideo(bgVideoPath)
+}
+
 
 // exporting for some dependencies:
 export { Logic, Visual } 

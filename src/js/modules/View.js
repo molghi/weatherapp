@@ -362,79 +362,6 @@ class View {
 
     // ================================================================================================
 
-    blinkInterface() {
-        const periodicity = 2*60*1000
-        const everyElInTop = document.querySelectorAll('.weather__top > div')
-
-        const weatherBox = document.querySelector('.weather')
-        const locationLine = document.querySelector('.weather__location')
-        const precipitationLine = document.querySelector('.weather__precipitation')
-        const windLine = document.querySelector('.weather__wind')
-        const cloudCoverLine = document.querySelector('.weather__cloud-cover')
-        const uvLine = document.querySelector('.weather__uv')
-        const lightLine = document.querySelector('.weather__light')
-        const humidityLine = document.querySelector('.weather__humidity')
-        const sunLine = document.querySelector('.weather__sun')
-        const everyElInMedium = [locationLine, precipitationLine, windLine, cloudCoverLine, uvLine, lightLine, humidityLine, sunLine]
-        const everyHourly = document.querySelectorAll('.weather__hour')
-        const everyDaily = document.querySelectorAll('.weather__day')
-
-        setTimeout(() => {
-            // weatherBox.style.animation = 'blink 1.5s steps(1, end)'
-            weatherBox.style.animation = 'blink-pulse 1s linear'
-            // weatherBox.style.animation = 'blink 1.25s ease-in-out'
-            setTimeout(() => {
-                weatherBox.style.animation = 'initial'
-            }, 2000);    
-        }, 3000);
-
-        return
-        
-        const arrayOfAll = [...everyElInTop, ...everyElInMedium]
-
-        // blinking: everyElInTop and everyElInMedium
-        setTimeout(() => {
-            arrayOfAll.forEach((el, i) => {
-                // blink .5s steps(1, end) .1s
-                el.style.animation = `blink .5s steps(1, end) .${i+1}s`
-                setTimeout(() => {
-                    el.style.animation = `initial`
-                }, 2000);
-            })
-        }, 1000);
-
-        // blinking hourly
-        setTimeout(() => {
-            everyHourly.forEach((el, i) => {
-                el.style.animation = `blink .5s steps(1, end) .${i+1}s`
-                setTimeout(() => {
-                    el.style.animation = `initial`
-                }, 2000);
-            })
-        }, 1700);
-
-        // blinking daily
-        setTimeout(() => {
-            everyDaily.forEach((el, i) => {
-                el.style.animation = `blink .5s steps(1, end) .${i+1}s`
-                setTimeout(() => {
-                    el.style.animation = `initial`
-                }, 2000);
-            })
-        }, 2200);
-    }
-
-    // ================================================================================================
-
-    glowInterface() {
-        // return
-        setTimeout(() => {
-            document.body.style.animation = 'glow 2s linear'
-        }, 3000);
-    }
-
-    // ================================================================================================
-
     handleTemperatureClick(handler) {
         this.weatherBoxEl.addEventListener('click', function(e) {
             if(!e.target.closest('.weather__temp') && !e.target.closest('.weather__day-temp') && !e.target.closest('.weather__hour-temp')) return  
@@ -444,10 +371,11 @@ class View {
 
     // ================================================================================================
 
-    showError() {
+    showError(text) {
         const div = document.createElement('div')
         div.classList.add('error', 'message-error')
-        div.innerHTML = `<div><span>Sorry, some error happened... Cannot show the weather now.</span><span>Try again later.</span></div>`
+        div.innerHTML = `<div><span>Sorry, some error happened... Cannot show the weather now.</span><span>Try again later.</span></div>`;
+        if(text) div.innerHTML = `<div>${text}</div>`;
         document.body.appendChild(div)
     }
 
@@ -497,26 +425,38 @@ class View {
     // ================================================================================================
 
     promptGeolocation() {
-        if (navigator.geolocation) {  // checks whether the Geolocation API is supported by the user's browser
-            navigator.geolocation.getCurrentPosition(     // navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options)
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    console.log(`Geoloc fetch success: Latitude: ${lat}, Longitude: ${lng}`);
-                    return [lat, lng]
-                },
-                (error) => {
-                    console.error(`Error (${error.code}): ${error.message}`);
-                },
-                {
-                    enableHighAccuracy: true,  // Requests more precise location information (e.g., GPS instead of Wi-Fi or cell tower data)
-                    timeout: 10000,  // Specifies the maximum time (in milliseconds) the device will wait to retrieve the location. If the specified time elapses without success, the errorCallback is invoked with a timeout error.
-                    maximumAge: 0,  // Determines the maximum age (in milliseconds) of cached location data. 0 means always fetch fresh data rather than using cached results.
-                }
-            );
-        } else {
-            console.error("Geolocation is not supported by this browser.");
-        }
+        return new Promise((resolve, reject) => {   // using promises to be able to consume it then
+            if (navigator.geolocation) {  // checks whether the Geolocation API is supported by the user's browser
+                navigator.geolocation.getCurrentPosition(  // navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options) // getCurrentPosition operates asynchronously.
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        // console.log(`Geoloc fetch success: Latitude: ${lat}, Longitude: ${lng}`);
+                        resolve([lat, lng]); // Resolve the Promise with the coordinates
+                    },
+                    (error) => {
+                        console.error(`Error (${error.code}): ${error.message}`);
+                        reject(error, null); // Reject the Promise with the error
+                    },
+                    {
+                        enableHighAccuracy: true,   // Requests more precise location information (e.g., GPS instead of Wi-Fi or cell tower data)
+                        timeout: 10000,   // Specifies the maximum time (in milliseconds) the device will wait to retrieve the location. If the specified time elapses without success, the errorCallback is invoked with a timeout error.
+                        maximumAge: 0,  // Determines the maximum age (in milliseconds) of cached location data. 0 means always fetch fresh data rather than using cached results.
+                    }
+                );
+            } else {
+                const error = "Geolocation is not supported by this browser.";
+                console.error(error);
+                reject(new Error(error));
+            }
+        });
+    }
+
+    // ================================================================================================
+
+    updateDocumentTitle(tempNow, shortDesc) { // tempFeelsLike too?
+        const value = `${tempNow}${this.celsiusSign}, ${shortDesc}`
+        document.title = `Weather Control: ${value}`
     }
 
 }

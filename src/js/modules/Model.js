@@ -7,10 +7,10 @@ import defineWeatherType from './model-dependencies/defineWeatherType.js';
 class Model {
     #state = {}
     constructor() {
-        this.myCoords = [41.0082, 28.9784]  // Istanbul
+        // this.myCoords = [41.0082, 28.9784]  // Istanbul
         // this.myCoords = [52.5200, 13.4050] // Berlin
         // this.myCoords = [48.8566, 2.3522] // Paris
-        // this.myCoords = [51.5074, -0.1278] // London
+        this.myCoords = [51.5074, -0.1278] // London
         // this.myCoords = [40.7128, -74.0060] // New York
         // this.myCoords = [64.1355, -21.8954] // Reykjavik
         // this.myCoords = [-33.8688, 151.2093] // Sydney
@@ -32,6 +32,13 @@ class Model {
         this.previousTimezoneFetches = []
         this.degrees = {}
         this.degreesFahrenheit = {}
+        this.fetchedCoords = []
+    }
+
+    // ================================================================================================
+
+    pushFetchedCoords(value) {
+        this.fetchedCoords.push(value)
     }
 
     // ================================================================================================
@@ -336,6 +343,15 @@ class Model {
             this.previousTimezoneFetches = JSON.parse(fetch)
         }
     }
+    
+    // ================================================================================================
+    
+    getCoordsFetchesFromLS() {
+        const fetch = localStorage.getItem('userCoords')
+        if (fetch) {
+            this.fetchedCoords = JSON.parse(fetch)
+        }
+    }
 
     // ================================================================================================
 
@@ -396,6 +412,61 @@ class Model {
             const mainTempMax = fetchedWeather.daily.temperature_2m_max[indexOfDaily]
             this.degrees.daily.push([mainTempMin, mainTempMax, feelsLikeMin, feelsLikeMax])
         }
+    }
+
+    // ================================================================================================
+
+    giveShortDescription(weathercode) {
+        weathercode = String(weathercode)
+        let shortDesc = ''
+        switch (weathercode) {
+            case '0':
+                shortDesc = 'Clear'
+                break;
+            case '1':
+            case '2':
+            case '3':
+                shortDesc = 'Cloudy'
+                break;
+            case '45':
+            case '48':
+                shortDesc = 'Foggy'
+                break;
+            case '51':
+            case '53':
+            case '55':
+            case '56':
+            case '57':
+                shortDesc = 'Drizzle'
+                break;
+            case '61':
+            case '63':
+            case '65':
+            case '66':
+            case '67':
+            case '80':
+            case '81':
+            case '82':
+                shortDesc = 'Rain'
+                break;
+            case '71':
+            case '73':
+            case '75':
+            case '77':
+            case '85':
+            case '86':
+                shortDesc = 'Snow'
+                break;
+            case '95':
+            case '96':
+            case '99':
+                shortDesc = 'Thunder'
+                break;
+            default:
+                shortDesc = ''
+                break;
+        }
+        return shortDesc
     }
 
 }
