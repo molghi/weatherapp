@@ -87,6 +87,7 @@ function logOutTimeNow() {
 
 function runEventListeners() {
     Visual.handleTemperatureClick(changeTempUnits)
+    Visual.handleChangeLocationClick(openModal)
 }
 
 // ===========================================================================================================================
@@ -146,6 +147,46 @@ function afterFetching(fetchedWeather, fetchedTimezone) {
     Visual.showBackgroundVideo(bgVideoPath)
 }
 
+// ================================================================================================
+
+function openModal() {
+    Visual.toggleModalWindow('show')  // rendering and showing the modal with the input field focused
+    Visual.handleSearchCitySubmit(fetchAndShowResults)    // handling submission of the form in that modal
+    Visual.handleModalCloseBtnClick()   // handling closing the modal
+
+    /* WHAT TO DO
+    - They click on one option, I close the dropdown, close the modal, and re-render it all: fetch weather from that place and update the DOM.
+    - I will save it to LS (local storage) as the current location
+    */
+}
+
+// ================================================================================================
+
+async function fetchAndShowResults(query) {
+    const parentElement = document.querySelector('.modal__form')  // needed to show the little spinner
+    Visual.clearModalResultsBox()    // clearing all found results in the modal
+    Visual.toggleLittleSpinner('show', parentElement)
+    const response = await Logic.fetchWeatherByCityName(query)  // fetching results
+    Visual.toggleLittleSpinner('hide')
+    Visual.renderResults(response)    // rendering results
+    Visual.handleClickingResult(fetchResultWeather)  // clicking on any result closes the modal, fetches weather, and re-renders the DOM
+}
+
+// ================================================================================================
+
+async function fetchResultWeather(lat, lng, timezone) {
+    Visual.toggleModalWindow('hide')
+
+    const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
+
+    // a sequence of actions that happen after fetching, such as rendering and updating things:
+    afterFetching(fetchedWeather, fetchedTimezone)
+
+    // running all event listeners
+    runEventListeners()
+}
+
+// ================================================================================================
 
 // exporting for some dependencies:
 export { Logic, Visual } 

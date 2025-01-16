@@ -233,12 +233,15 @@
         opacity: 0.5;
     }
 
-    &__place {}
-
+    &__place {
+        white-space: nowrap;
+    }
+    
     &__coords {
         opacity: 0.35;
         font-size: 20px;
         transition: all .3s;
+        white-space: nowrap;
         &:hover {
             opacity: 1;
         }

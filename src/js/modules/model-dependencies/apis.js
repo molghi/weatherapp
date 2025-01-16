@@ -74,5 +74,20 @@ async function fetchTimezone(coordsArr) {
     }
 }
 
+// ================================================================================================
 
-export { fetchWeather, fetchTimezone }
+async function fetchWeatherByCityName(cityName) {
+    try {
+        const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=10&language=en&format=json`
+        const response = await fetch(API_URL)
+        if(!response.ok) throw new Error('>> Fetching by city name was unsuccessful')
+        const data = await response.json()
+        return data
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+// ================================================================================================
+
+export { fetchWeather, fetchTimezone, fetchWeatherByCityName }

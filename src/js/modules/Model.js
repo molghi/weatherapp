@@ -1,5 +1,5 @@
 import { Value } from 'sass';
-import { fetchWeather, fetchTimezone } from './model-dependencies/apis.js'
+import { fetchWeather, fetchTimezone, fetchWeatherByCityName } from './model-dependencies/apis.js'
 import myObject from './model-dependencies/weathercodes.js';
 import defineBigIcon from './model-dependencies/defineBigIcon.js';
 import defineWeatherType from './model-dependencies/defineWeatherType.js';
@@ -10,7 +10,7 @@ class Model {
         // this.myCoords = [41.0082, 28.9784]  // Istanbul
         // this.myCoords = [52.5200, 13.4050] // Berlin
         // this.myCoords = [48.8566, 2.3522] // Paris
-        this.myCoords = [51.5074, -0.1278] // London
+        // this.myCoords = [51.5074, -0.1278] // London
         // this.myCoords = [40.7128, -74.0060] // New York
         // this.myCoords = [64.1355, -21.8954] // Reykjavik
         // this.myCoords = [-33.8688, 151.2093] // Sydney
@@ -20,6 +20,7 @@ class Model {
         // this.myCoords = [24.7136, 46.6753] // Riyadh
         // this.myCoords = [68.9585, 33.0827] // Murmansk
         // this.myCoords = [64.5399, 40.5152] // Arkhangelsk
+        this.myCoords = [57.1497, -2.0943] // Aberdeen
 
         this.sunriseTime = 0
         this.offsetInSeconds = 0
@@ -106,6 +107,13 @@ class Model {
     async fetchTimezone(coordsArr) {
         const dataObj = await fetchTimezone(coordsArr)
         return dataObj
+    }
+
+    // ================================================================================================
+
+    async fetchWeatherByCityName(cityName) {
+        const data = await fetchWeatherByCityName(cityName)
+        return data
     }
 
     // ================================================================================================

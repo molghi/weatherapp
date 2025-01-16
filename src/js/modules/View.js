@@ -48,13 +48,21 @@ class View {
 
         this.nowHours = 0
         this.nowMinutes = 0
+
+        this.boundCloseModal = this.closeModal.bind(this); // Storing bound function
     }
 
     // ================================================================================================
 
     // rendering .weather__place & .weather__coords
     renderLocationAndCoords(obj) {
-        const {city, continent, country, flag, coords} = obj
+        let {city, continent, country, flag, coords, timezone} = obj
+        city = city ? city : ''
+        continent = continent ? continent : ''
+        country = country ? country : ''
+        flag = flag ? flag : ''
+        coords = coords ? coords : ''
+        if(!city && timezone.name) city = timezone.name.split('/')[1]
         this.locationEl.innerHTML = `${city}, <span class="weather__country">${country}<span class="weather__flag">${flag}</span></span>, ${continent}, Terra`
         this.coordsEl.innerHTML = `(${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`
         this.locationTitleEl.innerHTML = `Location:`
@@ -356,6 +364,19 @@ class View {
 
     // ================================================================================================
 
+    toggleLittleSpinner(flag='show', parentElement) {
+        if(flag==='hide') {
+            document.querySelector('.spinner-little-wrapper').remove()
+        } else {
+            const div = document.createElement('div')
+            div.classList.add('spinner-little-wrapper')
+            div.innerHTML = `<div class="spinner-little-pulse"></div>`
+            parentElement.appendChild(div)
+        }
+    }
+
+    // ================================================================================================
+
     renderChangeLocBtn() {
         this.changeLocBtnBoxEl.innerHTML = `<button class="change-location-btn">Change Location</button>`
     }
@@ -457,6 +478,129 @@ class View {
     updateDocumentTitle(tempNow, shortDesc) { // tempFeelsLike too?
         const value = `${tempNow}${this.celsiusSign}, ${shortDesc}`
         document.title = `Weather Control: ${value}`
+    }
+
+    // ================================================================================================
+
+    handleChangeLocationClick(handler) {
+        const btn = document.querySelector('.change-location-btn')
+        btn.addEventListener('click', function(e) {
+            handler()
+        })
+    }
+
+    // ================================================================================================
+
+    toggleModalWindow(flag='show'){
+        if(flag==='hide') {   // hiding/removing it
+            document.querySelector('.modal').style.backgroundColor = 'transparent'
+            document.querySelector('.modal__window').style.animation = `bounceReverse 0.1s ease-in-out forwards`
+            setTimeout(() => {
+                if(document.querySelector('.modal')) document.querySelector('.modal').remove()
+            }, 500);
+        } else { // showing it
+            this.renderModalWindow()
+            setTimeout(() => {
+                document.querySelector('.modal__input').focus()
+            }, 500);
+        }
+    }
+
+    // ================================================================================================
+
+    handleSearchCitySubmit(handler) {
+        document.querySelector('.modal__form').addEventListener('submit', function(e) {
+            e.preventDefault()
+            const inputValue = this.querySelector('input').value
+            // this.querySelector('input').value = ''
+            handler(inputValue)
+        })
+    }
+
+    // ================================================================================================
+
+    renderModalWindow() {
+        const div = document.createElement('div')
+        div.classList.add('modal')
+        div.innerHTML = `<div class="modal__window">
+            <div class="modal__title">Search By City Name:</div>
+            <form class="modal__form" action="#">
+                <input type="text" class="modal__input" autofocus>
+            </form>
+            <div class="modal__close-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+            </div>
+        </div>`
+        document.body.appendChild(div)
+    }
+
+    // ================================================================================================
+
+    renderResults(resultsObj) {
+        if(!resultsObj.hasOwnProperty('results')) {   // if nothing was found:
+            const html = `<div class="modal__nothing">Nothing was found</div>`
+            document.querySelector('.modal__form').insertAdjacentHTML(`beforeend`, html)
+            return
+        }
+        const div = document.createElement('div')
+        div.classList.add('modal__results')
+        const results = resultsObj.results.map(result => this.giveOneResultHtml(result)).join('')
+        div.innerHTML = ''
+        div.innerHTML = results
+        document.querySelector('.modal__form').appendChild(div)
+    }
+
+    // ================================================================================================
+
+    giveOneResultHtml(resultObj) {
+        let {country, name, latitude, longitude, timezone, admin1} = resultObj
+        name = name ? name : ''   // name is a city name
+        admin1 = admin1 ? ', ' + admin1 : ''   // admin1 is a region/state
+        country = country ? ', ' + country : ''
+        timezone = timezone ? timezone : ''
+        latitude = latitude ? latitude : ''
+        longitude = longitude ? longitude : ''
+        const fullname = `${name}${admin1}${country}`
+        return `<div class="modal__result" data-lat="${latitude}" data-lng="${longitude}" data-timezone="${timezone}" title="${fullname}">
+${fullname}
+</div>`
+    }
+
+    // ================================================================================================
+
+    clearModalResultsBox() {
+        if(document.querySelector('.modal__results')) document.querySelector('.modal__results').remove()
+        if(document.querySelector('.modal__nothing')) document.querySelector('.modal__nothing').remove()    
+    }
+
+    // ================================================================================================
+
+    handleModalCloseBtnClick() {
+        document.addEventListener('click', this.boundCloseModal)
+    }
+
+    // ================================================================================================
+
+    closeModal(e) {
+        if(e.target.classList.contains('modal')) {
+            this.toggleModalWindow('hide')
+            document.removeEventListener('click', this.boundCloseModal); // Remove listener after hiding modal
+        }
+        if(!e.target.closest('.modal__close-btn')) return 
+        this.toggleModalWindow('hide')
+        document.removeEventListener('click', this.boundCloseModal); // Remove listener after hiding modal
+    }
+
+    // ================================================================================================
+
+    handleClickingResult(handler) {
+        document.querySelector('.modal').addEventListener('click', function(e) {
+            if(!e.target.classList.contains('modal__result')) return
+            const lat = e.target.dataset.lat
+            const lng = e.target.dataset.lng
+            const timezone = e.target.dataset.timezone
+            handler(lat, lng, timezone)
+        })
     }
 
 }
