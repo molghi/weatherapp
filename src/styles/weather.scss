@@ -97,6 +97,7 @@
         flex-wrap: wrap;
         text-align: center;
         justify-content: center;
+        position: relative;
         @media (max-width: 420px) {
             column-gap: 0px;
         }
@@ -810,5 +811,36 @@
 
     @media (max-width: 1015px){
         padding-bottom: 30px;
+    }
+
+    &__icons {
+        display: flex;
+        align-items: center;
+        column-gap: 10px;
+        position: absolute;
+        top: 0;
+        right: 15%;
+        .btn-make-primary, .btn-add-location {
+            opacity: 0.3;
+            width: 38px;
+            svg {
+                path{fill: var(--accent);}
+            }
+            &:hover {
+                background-color: transparent;
+                box-shadow: none;
+                opacity: 1;
+            }
+            &:active {
+                opacity: 0.3;
+            }
+        }
+        .btn-make-primary {
+            width: 39px;
+            border: none;
+        }
+        .btn-add-location {
+            border: none;
+        }
     }
 }

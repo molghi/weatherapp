@@ -34,6 +34,89 @@ class Model {
         this.degrees = {}
         this.degreesFahrenheit = {}
         this.fetchedCoords = []
+        this.primaryLocation = []
+        this.savedLocations = []
+    }
+
+    // ================================================================================================
+
+    pushSavedLocation(obj, flag) {
+        if(flag==='pushPrimary') {
+            this.savedLocations.unshift(obj)
+        } else {
+            this.savedLocations.push(obj)
+        }
+        this.pushToLocalStorage(JSON.stringify(this.savedLocations), 'savedLocations')
+    }
+
+    // ================================================================================================
+
+    getSavedLocations() {
+        const fetched = localStorage.getItem('savedLocations')
+        if(!fetched) return
+        JSON.parse(fetched).forEach(locationObj => this.savedLocations.push(locationObj))
+    }
+
+    // ================================================================================================
+
+    getPrimaryLocation() {
+        const fetched = localStorage.getItem('primaryLocation')
+        if(!fetched) return
+        this.primaryLocation = JSON.parse(fetched)
+    }
+
+    // ================================================================================================
+
+    // checks if the arrays that have recent fetches do not grow to be more than length 20: 
+    // if they more than length 20, i slice them and make them length 20 (the last 20 pushed items, older ones sliced out) else they occupy too much space in LS and grow out of hand
+    truncateFetchArrays() {
+        const amountOfElementsToHave = 20
+        if(this.fetchedCoords.length > amountOfElementsToHave) {
+            this.fetchedCoords = this.fetchedCoords.slice(-amountOfElementsToHave)
+            localStorage.setItem('userCoords', JSON.stringify(this.fetchedCoords))
+        }
+        if(this.previousWeatherFetches.length > amountOfElementsToHave) {
+            this.previousWeatherFetches = this.previousWeatherFetches.slice(-amountOfElementsToHave)
+            localStorage.setItem('weatherFetches', JSON.stringify(this.previousWeatherFetches))
+        }
+        if(this.previousTimezoneFetches.length > amountOfElementsToHave) {
+            this.previousTimezoneFetches = this.previousTimezoneFetches.slice(-amountOfElementsToHave)
+            localStorage.setItem('timezoneFetches', JSON.stringify(this.previousTimezoneFetches))
+            
+        }
+    }
+
+    // ================================================================================================
+
+    updateSavedLocation(objOfData) {
+        const indexOfThisLocation = this.savedLocations.findIndex(entry => entry.coords.toString() === objOfData.coords.toString())
+
+        // updating:
+        this.savedLocations[indexOfThisLocation].localTime = objOfData.localTime
+        this.savedLocations[indexOfThisLocation].temp = objOfData.temp
+        this.savedLocations[indexOfThisLocation].icon = objOfData.icon
+        this.savedLocations[indexOfThisLocation].feelsLikeTemp = objOfData.feelsLikeTemp
+        this.savedLocations[indexOfThisLocation].description = objOfData.description
+
+        // pushing to LS
+        this.pushToLocalStorage(JSON.stringify(this.savedLocations), 'savedLocations')
+    }
+
+    // ================================================================================================
+
+    pushPrimaryLocation([lat,lng]) {
+        this.primaryLocation = []
+        this.primaryLocation.push(lat, lng)
+        this.pushToLocalStorage(JSON.stringify(this.primaryLocation), 'primaryLocation')
+    }
+
+    // ================================================================================================
+
+    makeSavedLocationFirst(coords) {
+        const indexOfEntry = this.savedLocations.findIndex(entry => entry.coords.toString() === `${coords[0]},${coords[1]}`)
+        const spliced = this.savedLocations.splice(indexOfEntry, 1)  // removing from the array
+        this.savedLocations.unshift(spliced[0])   // adding as first
+        this.pushToLocalStorage(JSON.stringify(this.savedLocations), 'savedLocations')
     }
 
     // ================================================================================================
@@ -475,6 +558,14 @@ class Model {
                 break;
         }
         return shortDesc
+    }
+
+    // ================================================================================================
+
+    removeFromSavedLocations(latStr, lngStr) {
+        const indexToRemove = this.savedLocations.findIndex(entry => entry.coords.toString() === `${latStr},${lngStr}`)
+        this.savedLocations.splice(indexToRemove, 1)  // removing from the array
+        this.pushToLocalStorage(JSON.stringify(this.savedLocations), 'savedLocations')
     }
 
 }

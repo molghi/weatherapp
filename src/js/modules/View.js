@@ -1,4 +1,4 @@
-import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon } from './view-dependencies/icons.js'
+import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon, houseIcon, plusIcon } from './view-dependencies/icons.js'
 
 class View {
     constructor() {
@@ -62,10 +62,23 @@ class View {
         country = country ? country : ''
         flag = flag ? flag : ''
         coords = coords ? coords : ''
-        if(!city && timezone.name) city = timezone.name.split('/')[1]
+        if(!city && timezone.name) city = timezone.name.split('/')[1].replaceAll('_','')
         this.locationEl.innerHTML = `${city}, <span class="weather__country">${country}<span class="weather__flag">${flag}</span></span>, ${continent}, Terra`
         this.coordsEl.innerHTML = `(${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`
         this.locationTitleEl.innerHTML = `Location:`
+        this.addTopIcons()
+    }
+    
+    // ================================================================================================
+    
+    // adding the Make Primary and Add to Cities List btn-icons
+    addTopIcons() {
+        const parentEl = document.querySelector('.weather__top')
+        const div = document.createElement('div')
+        div.classList.add('weather__icons')
+        div.innerHTML = `<button title="Make this your primary location" class="btn-make-primary">${houseIcon}</button>
+<button title="Add this location to your list" class="btn-add-location">${plusIcon}</button>`
+        parentEl.appendChild(div)
     }
 
     // ================================================================================================
@@ -353,7 +366,7 @@ class View {
 
     toggleSpinner(flag='show') {
         if(flag==='hide') {
-            document.querySelector('.spinner-wrapper').remove()
+            if(document.querySelector('.spinner-wrapper')) document.querySelector('.spinner-wrapper').remove()
         } else {
             const div = document.createElement('div')
             div.classList.add('spinner-wrapper')
@@ -600,6 +613,113 @@ ${fullname}
             const lng = e.target.dataset.lng
             const timezone = e.target.dataset.timezone
             handler(lat, lng, timezone)
+        })
+    }
+
+    // ================================================================================================
+
+    // btns: Make Primary and Add a Location to the list
+    handleLocationBtns(handler) {
+        // this.weatherBoxEl.addEventListener('click', this.topLocationBtnsHandler)
+        this.removeLocationBtnsHandler() // removing any existing listener first (because I re-render the element with these buttons frequently)
+        this.boundTopLocationBtnsHandler = (e) => this.topLocationBtnsHandler(e, handler) // binding the handler to topLocationBtnsHandler and storing the reference
+        this.weatherBoxEl.addEventListener('click', this.boundTopLocationBtnsHandler)
+    }
+    
+    // ================================================================================================
+
+    // dependency of 'handleLocationBtns'
+    removeLocationBtnsHandler() {
+        if (this.boundTopLocationBtnsHandler) {
+            this.weatherBoxEl.removeEventListener('click', this.boundTopLocationBtnsHandler)
+            this.boundTopLocationBtnsHandler = null // cleaning up reference
+        }
+    }
+
+    // ================================================================================================
+
+    topLocationBtnsHandler(e, handler) {
+        if(!e.target.closest('.btn-make-primary') && !e.target.closest('.btn-add-location')) return
+
+        const localTime = this.timeEl.textContent
+        const cityName = this.locationEl.textContent.split(',')[0]
+        const country = this.locationEl.textContent.split(',')[1].slice(1,-4)
+        const temp = this.airTempEl.textContent
+        const icon = this.bigIconEl.querySelector('img').src 
+        const coords = this.coordsEl.textContent.slice(1,-1).split(',').map(x => x.trim().slice(0,-3))
+        const feelsLikeTemp = this.feelsLikeEl.textContent
+        const description = this.weatherDescriptionEl.textContent
+        const thisLocationDataObj = { localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description }
+
+        if(e.target.closest('.btn-make-primary')) {
+            handler('makePrimary', thisLocationDataObj)
+        }
+
+        if(e.target.closest('.btn-add-location')) {  // clicking on the Add Location button
+            handler('addLocation', thisLocationDataObj)
+        }
+    }
+
+    // ================================================================================================
+
+    addLocation(type='addingNew', obj) {
+        let localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description;
+        if(type === 'addingNew') {  // adding a new location upon the Add Location btn click:
+            ({localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description} = this.getThisLocationData())
+        } else {  // rendering the existing ones:
+            ({localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description} = obj) // the variables are already declared, so wrapping the destructuring in parentheses to distinguish it from a block else it will err
+        }
+        
+        const html = this.giveSmallLocationHtml(localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description) 
+
+        document.querySelector('.added-locations').insertAdjacentHTML('beforeend', html)
+        
+        return { localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description }
+    }
+
+    // ================================================================================================
+
+    giveSmallLocationHtml(localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description) {
+        return `<div class="added-location" data-coords="${coords}">
+                   <button class="added-location-remove-btn">Remove</button>
+                   <div class="added-location-col">
+                        <div class="added-location-time">${localTime}</div>
+                        <div class="added-location-city" title="${cityName}, ${country}">${cityName}</div>
+                   </div>
+                   <div class="added-location-col added-location-icon" title="${description}"><img src="${icon}"></div>
+                   <div class="added-location-col added-location-temp" title="${feelsLikeTemp}">${temp}</div>
+               </div>`
+    }
+
+    // ================================================================================================
+
+    getThisLocationData() {
+        const localTime = this.timeEl.textContent
+        const cityName = this.locationEl.textContent.split(',')[0]
+        const country = this.locationEl.textContent.split(',')[1].slice(1,-4)
+        const temp = this.airTempEl.textContent
+        const icon = this.bigIconEl.querySelector('img').src 
+        const coords = this.coordsEl.textContent.slice(1,-1).split(',').map(x => x.trim().slice(0,-3))
+        const feelsLikeTemp = this.feelsLikeEl.textContent
+        const description = this.weatherDescriptionEl.textContent
+        return { localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description }
+    }
+
+    // ================================================================================================
+
+    handleSavedLocationsClick(handler) {
+        document.querySelector('.added-locations').addEventListener('click', (e) => {
+            // if(!e.target.classList.contains('added-location-remove-btn')) return
+            if(!e.target.closest('.added-location')) return
+
+            if(e.target.classList.contains('added-location-remove-btn')) {    // click on remove btn --> removing the item
+                handler('remove', e.target.closest('.added-location').dataset.coords)
+                return
+            } 
+            if(e.target.closest('.added-location')) {    // click not on remove btn --> fetch weather
+                handler('fetch', e.target.closest('.added-location').dataset.coords)
+                return
+            }
         })
     }
 

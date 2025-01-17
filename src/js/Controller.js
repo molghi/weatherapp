@@ -6,32 +6,49 @@ import '../styles/main.scss'
 import Model from './modules/Model.js'  
 import View from './modules/View.js'  
 import { renderAll, renderSunriseSunset } from './modules/controller-dependencies/rendering.js'
-import KeyCommands from './modules/KeyCommands.js'  // to do sth by typing certain keys
-import LS from './modules/Storage.js'  // to work with local storage
+// import KeyCommands from './modules/KeyCommands.js'  // to do sth by typing certain keys
+// import LS from './modules/Storage.js'  // to work with local storage
 
 const Logic = new Model()
 const Visual = new View()
 
+
 // ===========================================================================================================================
+
 
 async function init() {
     try {
-        Logic.getWeatherFetchesFromLS()
-        Logic.getTimezoneFetchesFromLS()
-        Logic.getCoordsFetchesFromLS()
+        Logic.getWeatherFetchesFromLS()  // fetching from local storage: recent weather api fetches
+        Logic.getTimezoneFetchesFromLS()  // fetching from local storage: recent timezone api fetches
+        Logic.getCoordsFetchesFromLS()  // fetching from local storage: recently added coords
+        Logic.getSavedLocations()  // fetching from local storage: recently saved locations
+        Logic.getPrimaryLocation()  // fetching from local storage: the primary location array of lat and lng
+        Logic.truncateFetchArrays()  // checks if the arrays that have recent fetches do not grow to be more than length 20: if they more than length 20, i slice them and make them length 20 else they occupy too much space in LS and grow out of hand
 
-        // Using Browser Geolocation API to determine a user's position
-        Visual.toggleSpinner('show')
-        const userGeolocCoords = await Visual.promptGeolocation()   // userGeolocationCoords is an array
-        // console.log(`userGeolocCoords:`, userGeolocCoords)
-        Visual.toggleSpinner('hide')
-        Logic.pushFetchedCoords(userGeolocCoords)
+        let coords
 
-        // const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(Logic.myCoords, Logic.myCoords)
-        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(userGeolocCoords, userGeolocCoords)
+        if(Logic.primaryLocation.length > 0) {
+            coords = Logic.primaryLocation
+        } else if(localStorage.getItem('currentLocation')) {
+            coords = JSON.parse(localStorage.getItem('currentLocation'))    // if exists in LS, make this the 'coords' -- if not, prompt geolocation
+        } else {
+            // Using Browser Geolocation API to determine a user's position 
+            Visual.toggleSpinner('show')
+            coords = await Visual.promptGeolocation()   // 'coords' is an array
+            Visual.toggleSpinner('hide')
+        }
+        // console.log(coords)
+        Logic.pushFetchedCoords(coords)
+        Logic.pushPrimaryLocation(coords)
+
+        // fetching timezone and weather:
+        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(coords, coords)
 
         // a sequence of actions that happen after fetching, such as rendering and updating things:
         afterFetching(fetchedWeather, fetchedTimezone)
+
+        // rendering saved locations:
+        if(Logic.savedLocations.length > 0) Logic.savedLocations.forEach(locationObj => Visual.addLocation('render', locationObj)) 
 
         // running all event listeners
         runEventListeners()
@@ -44,7 +61,9 @@ async function init() {
 }
 init()
 
+
 // ===========================================================================================================================
+
 
 // re-fetching and re-rendering the weather every hour
 setInterval(async () => {
@@ -55,7 +74,9 @@ setInterval(async () => {
     }
 }, 3600 * 1000) // 3600 * 1000 milliseconds = 1 hour
 
+
 // ===========================================================================================================================
+
 
 // fetching timezone and weather
 async function fetchTimezoneAndWeather(timezoneCoords, weatherCoords) {
@@ -74,7 +95,9 @@ async function fetchTimezoneAndWeather(timezoneCoords, weatherCoords) {
     }
 }
 
+
 // ===========================================================================================================================
+
 
 function logOutTimeNow() {
     console.log(`⏰ ${new Date().getHours()}:${(new Date().getMinutes()).toString().padStart(2,0)}`)
@@ -83,14 +106,20 @@ function logOutTimeNow() {
     }, 60000);
 }
 
+
 // ===========================================================================================================================
+
 
 function runEventListeners() {
     Visual.handleTemperatureClick(changeTempUnits)
     Visual.handleChangeLocationClick(openModal)
+    Visual.handleLocationBtns(locationBtnsHandler)
+    Visual.handleSavedLocationsClick(savedLocationsClick)
 }
 
+
 // ===========================================================================================================================
+
 
 function changeTempUnits() {
     const unitsNow = Logic.switchTempUnits()
@@ -101,16 +130,20 @@ function changeTempUnits() {
     }
 }
 
+
 // ===========================================================================================================================
+
 
 function pushFetchesToModelAndLs(fetchedWeather, fetchedTimezone) {
-    Logic.pushWeatherFetch(fetchedWeather)  // to Model
-    Logic.pushTimezoneFetch(fetchedTimezone)  // to Model
-    Logic.pushWeatherFetchesToLS()
-    Logic.pushTimezoneFetchesToLS()
+    Logic.pushWeatherFetch(fetchedWeather)  // pushing to Model
+    Logic.pushTimezoneFetch(fetchedTimezone)  // pushing to Model
+    Logic.pushWeatherFetchesToLS()  // pushing to local storage
+    Logic.pushTimezoneFetchesToLS()  // pushing to local storage
 }
 
+
 // ===========================================================================================================================
+
 
 function afterFetching(fetchedWeather, fetchedTimezone) {
     // pushing fetches to Model and LS
@@ -147,7 +180,9 @@ function afterFetching(fetchedWeather, fetchedTimezone) {
     Visual.showBackgroundVideo(bgVideoPath)
 }
 
+
 // ================================================================================================
+
 
 function openModal() {
     Visual.toggleModalWindow('show')  // rendering and showing the modal with the input field focused
@@ -160,7 +195,9 @@ function openModal() {
     */
 }
 
+
 // ================================================================================================
+
 
 async function fetchAndShowResults(query) {
     const parentElement = document.querySelector('.modal__form')  // needed to show the little spinner
@@ -172,10 +209,14 @@ async function fetchAndShowResults(query) {
     Visual.handleClickingResult(fetchResultWeather)  // clicking on any result closes the modal, fetches weather, and re-renders the DOM
 }
 
+
 // ================================================================================================
+
 
 async function fetchResultWeather(lat, lng, timezone) {
     Visual.toggleModalWindow('hide')
+
+    Logic.pushPrimaryLocation([lat, lng])
 
     const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
 
@@ -184,6 +225,94 @@ async function fetchResultWeather(lat, lng, timezone) {
 
     // running all event listeners
     runEventListeners()
+}
+
+
+// ================================================================================================
+
+
+function locationBtnsHandler(typeOfAction, obj) { 
+    const savedLocationsCoords = Logic.savedLocations.map(locationObj => locationObj.coords.toString())  // stringifying coords, which is an array, to compare it
+
+    if(typeOfAction === 'makePrimary' && savedLocationsCoords.includes(obj.coords.toString())) {
+        makeLocationPrimary(obj)
+    } else {
+        if(savedLocationsCoords.length === 6) 
+            alert(`6 saved locations is the limit!\nRemove some of the existing ones to add new.`)   // can add no more than 6 locations to Saved Locations
+            return
+    }
+
+    if(typeOfAction === 'addLocation') {     // clicked on the Add Location btn:
+        if(savedLocationsCoords.includes(obj.coords.toString())) return;    // means location is already on the list
+        else {
+            Logic.pushSavedLocation(obj)    // adding it to Model and LS
+            Visual.addLocation('render', obj)   // adding it in the UI
+        }
+    } else {  // clicked on the makePrimary btn:
+        makeLocationPrimary(obj)
+    }
+
+    // e.target.closest('.btn-add-location').setAttribute('disabled', true)
+    // const thisLocationDataObj = this.addLocation()
+}
+
+// ================================================================================================
+
+function makeLocationPrimary(obj) {
+    const { coords } = obj
+    const indexInSavedLocations = Logic.savedLocations.findIndex(entry => entry.coords.toString() === coords.toString())
+
+    if(indexInSavedLocations === 0) {  // means the index of it there is zero, it is first, do nothing with Logic.savedLocations, only change Logic.primaryLocation
+        return Logic.pushPrimaryLocation([coords[0], coords[1]]);
+    }  
+
+    if(indexInSavedLocations > 0) {  // means it is there but not the first, so I need to make it first
+        Logic.makeSavedLocationFirst(coords)  // making it first and pushing it to LS
+    }
+
+    if(indexInSavedLocations < 0) { // means it's not on the list, so I add it there and make it first
+        Logic.pushSavedLocation(obj, 'pushPrimary')    // adding it to Model and LS to savedLocations as the 1st entry
+    }
+
+    Logic.pushPrimaryLocation([coords[0], coords[1]])  // changing primaryLocation and pushing it to LS
+    document.querySelector('.added-locations').innerHTML = ``  // to re-render
+    Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
+}
+
+// ================================================================================================
+
+async function savedLocationsClick(typeOfAction, coords) {
+
+    const [lat, lng] = coords.split(',')
+
+    if(typeOfAction === 'remove') {  // removing saved location
+        Logic.removeFromSavedLocations(lat, lng)  // delete from Model and push this change to LS
+        document.querySelector('.added-locations').innerHTML = ``   // to re-render
+        Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
+    }
+
+    if(typeOfAction === 'fetch') {  // fetching the weather by 'coords' and displaying it
+        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
+
+        // a sequence of actions that happen after fetching, such as rendering and updating things:
+        afterFetching(fetchedWeather, fetchedTimezone)
+
+        // running all event listeners
+        runEventListeners()
+
+        // because I just clicked on the saved location item and fetched the weather from there, I need to update that element in Saved Locations
+        updateThisSavedLocation()
+    }
+
+}
+
+// ================================================================================================
+
+function updateThisSavedLocation() {
+    const objOfData = Visual.getThisLocationData()  // getting this location data from the newly rendered
+    Logic.updateSavedLocation(objOfData)  // pushing it to Logic.savedLocations and LS
+    document.querySelector('.added-locations').innerHTML = ``  // to re-render
+    Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
 }
 
 // ================================================================================================
