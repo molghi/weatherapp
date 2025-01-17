@@ -54,9 +54,9 @@ async function init() {
         runEventListeners()
 
     } catch (error) {
-        console.error(`Failed to fetch geolocation: ${error.message}`);
+        console.error(`💥💥💥 Failed to fetch geolocation: ${error.message}`);
         Visual.toggleSpinner('hide')
-        Visual.showError('Temporary error: Geoloc denied --> (this is where I must show the input field so the user could choose a city)')
+        Visual.showError('Temporary error: Geoloc denied') // this is where I must show the input field so the user could choose a city
     }
 }
 init()
