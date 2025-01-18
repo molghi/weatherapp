@@ -38,7 +38,7 @@ async function init() {
             coords = await Visual.promptGeolocation()   // 'coords' is an array
             Visual.toggleSpinner('hide')
         }
-        
+
         Logic.pushFetchedCoords(coords)
         Logic.pushPrimaryLocation(coords)
 
@@ -193,9 +193,11 @@ function afterFetching(fetchedWeather, fetchedTimezone) {
 
 function openModal() {
     Visual.toggleModalWindow('show')  // rendering and showing the modal with the input field focused
-    Visual.handleSearchCitySubmit(fetchAndShowResults)    // handling submission of the form in that modal
+    setTimeout(() => {
+        Visual.handleSearchCitySubmit(fetchAndShowResults)    // handling submission of the form in that modal
+    }, 500);
     Visual.handleModalCloseBtnClick()   // handling closing the modal
-
+    
     /* WHAT TO DO
     - They click on one option, I close the dropdown, close the modal, and re-render it all: fetch weather from that place and update the DOM.
     - I will save it to LS (local storage) as the current location

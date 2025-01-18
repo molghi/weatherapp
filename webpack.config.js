@@ -1,5 +1,6 @@
-const path = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const path = require('path');
+const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -95,9 +96,13 @@ module.exports = {
                 },
             ],
         }),
+        new webpack.DefinePlugin({
+        'process.env.API_KEY': JSON.stringify(process.env.API_KEY),
+        'process.env.OPEN_WEATHER_MAP_API_KEY': JSON.stringify(process.env.OPEN_WEATHER_MAP_API_KEY),
+        'process.env.WEATHER_API_KEY': JSON.stringify(process.env.WEATHER_API_KEY),
+        })
     ], 
     stats: {
         warningsFilter: [/sass\.dart\.js/],
     }
 }
-

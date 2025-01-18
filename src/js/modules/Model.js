@@ -3,7 +3,11 @@ import { fetchWeather, fetchTimezone, fetchWeatherByCityName } from './model-dep
 import myObject from './model-dependencies/weathercodes.js';
 import defineBigIcon from './model-dependencies/defineBigIcon.js';
 import defineWeatherType from './model-dependencies/defineWeatherType.js';
-import { API_KEY, OPEN_WEATHER_MAP_API_KEY, WEATHER_API_KEY } from './config.js'
+// import { API_KEY, OPEN_WEATHER_MAP_API_KEY, WEATHER_API_KEY } from './config.js'
+
+const API_KEY = process.env.API_KEY;
+const OPEN_WEATHER_MAP_API_KEY = process.env.OPEN_WEATHER_MAP_API_KEY;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -52,7 +56,7 @@ class Model {
     assignMap() {
         try {
             if(this.primaryLocation.length === 0) {
-                return console.log(`assignMap early return: Cannot initialise Leaflet without coords`)
+                return console.warn(`Model.assignMap early return: Cannot initialise Leaflet without coords`)
             }
             const myCoords = this.primaryLocation.map(x => Number(x))
             const zoomLevel = 6
@@ -82,7 +86,6 @@ class Model {
 
             // After re-initialization, force the map to recheck its size
             this.map.invalidateSize();
-            console.log(`Leaflet was initialised`)
         } catch (error) {
             console.error(`💥💥💥 Error: Leaflet initialising`)
             throw error
@@ -110,12 +113,6 @@ class Model {
         this.currentMarker = L.marker(coords, { icon }).addTo(this.map)
             // .bindPopup('You are here!')
             // .openPopup();
-    }
-
-    // ================================================================================================
-
-    initMap() {
-        console.log('initMap() is empty');
     }
 
     // ================================================================================================

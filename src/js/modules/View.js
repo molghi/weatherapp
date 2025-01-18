@@ -392,7 +392,9 @@ class View {
     // ================================================================================================
 
     renderChangeLocBtn() {
-        document.querySelector('.change-location-btn').textContent = `Change Location`
+        document.querySelector('.button-box button:nth-child(1)').textContent = `Change Location`
+        document.querySelector('.button-box button:nth-child(1)').classList.add('change-location-btn')
+        // document.querySelector('.change-location-btn').textContent = `Change Location`
         // this.changeLocBtnBoxEl.innerHTML = `<button class="change-location-btn">Change Location</button>`
     }
 

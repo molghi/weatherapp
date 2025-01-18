@@ -58,7 +58,7 @@ function renderHourly(fetchedWeather) {
     // const todayFormatted = `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}T${(new Date().getHours()).toString().padStart(2,0)}:00`    // like: "2025-01-10T21:00"
 
     const indexOfNowInHourly = fetchedWeather.hourly.time.findIndex(dateTimeStr => dateTimeStr === todayFormatted)   // because 'hourly' has 300+ elements representing all hours since 7 days ago
-    console.log(`indexOfNowInHourly:`, indexOfNowInHourly)
+// console.log(`indexOfNowInHourly:`, indexOfNowInHourly)
     
     Object.keys(fetchedWeather.hourly).forEach(key => hourlyObj[key] = fetchedWeather.hourly[key].slice(indexOfNowInHourly, indexOfNowInHourly+upcomingHours))  // populating `hourlyObj`
     

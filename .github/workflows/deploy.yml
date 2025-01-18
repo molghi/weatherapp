@@ -27,8 +27,16 @@ jobs:
       - name: Install dependencies
         run: npm install # Install dependencies
 
-      - name: Build project
-        run: npm run build # Run your build script (ensure 'dist' is the output folder)
+        # Inject API Key and Build
+      - name: Build the project
+        env:
+          API_KEY: ${{ secrets.API_KEY }} # Inject the secret into the build process
+          OPEN_WEATHER_MAP_API_KEY: ${{ secrets.OPEN_WEATHER_MAP_API_KEY }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: npm run build
+
+      # - name: Build project
+      # run: npm run build # Run your build script (ensure 'dist' is the output folder)
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
@@ -42,3 +50,6 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4 # Deploy to GitHub Pages
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist # Adjust based on your build output folder

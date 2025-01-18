@@ -1,5 +1,10 @@
-import { API_KEY } from '../config.js'
+// import { API_KEY } from '../config.js'
 import { Logic, Visual } from '../../Controller.js'   // needed to show and then hide the spinner: Visual.toggleSpinner
+const API_KEY = process.env.API_KEY;
+const OPEN_WEATHER_MAP_API_KEY = process.env.OPEN_WEATHER_MAP_API_KEY;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+
+console.log(API_KEY)
 
 async function fetchWeather(coordsArr) {
     try {
@@ -49,8 +54,8 @@ async function fetchWeather(coordsArr) {
 async function fetchTimezone(coordsArr) {
     try {
         const [lat, lng] = coordsArr
-        const API_URL = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${API_KEY}`
-        const response = await fetch(API_URL)
+        const API__URL = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${API_KEY}`
+        const response = await fetch(API__URL)
         if(!response.ok) {
             console.error('Timezone fetch response not OK:', response.status, response.statusText);
             throw new Error('Failed to fetch the timezone');

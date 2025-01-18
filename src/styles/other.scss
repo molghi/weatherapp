@@ -79,10 +79,17 @@
 
 .button-box {
 
+    button {
+        border: none;
+        padding: 0px;
+    }
+
     .change-location-btn {
         position: absolute;
         bottom: 10px;
         right: 10px;
+        border: 1px solid var(--accent);
+        padding: 10px;
         opacity: 0.2;
 
         &:hover {
@@ -99,12 +106,13 @@
         bottom: 10px;
         right: 180px;
         padding: 0;
+        margin: 0;
         border: none;
         opacity: 0.2;
         svg {
             width: 20px;
             path {
-                fill: var(--accent)
+                fill: var(--accent);
             }
         }
         &:hover {
