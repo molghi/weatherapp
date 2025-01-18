@@ -39,6 +39,10 @@ module.exports = {
                 parser: { requireEnsure: false },
             },
             {
+                test: /\.css$/,  // Match .css files
+                use: ['style-loader', 'css-loader'],  // Use these loaders for CSS
+            },
+            {
                 test: /\.scss$/,  
                 use: ['style-loader', 'css-loader', 'sass-loader']
             }, 
@@ -65,9 +69,15 @@ module.exports = {
             },
             {
                 test: /\.(png|jpg|jpeg|gif)$/i,
-                type: 'asset/resource'
+                type: 'asset/resource',
+                generator: {
+                    filename: 'assets/icons/[name][ext]', // Customize output folder
+                },
             }
         ]
+    },
+    resolve: {
+        extensions: ['.js', '.css'],  // Allow resolving .js and .css extensions
     },
     plugins: [  
         new HtmlWebpackPlugin({

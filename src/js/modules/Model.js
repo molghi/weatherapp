@@ -3,6 +3,13 @@ import { fetchWeather, fetchTimezone, fetchWeatherByCityName } from './model-dep
 import myObject from './model-dependencies/weathercodes.js';
 import defineBigIcon from './model-dependencies/defineBigIcon.js';
 import defineWeatherType from './model-dependencies/defineWeatherType.js';
+import { API_KEY, OPEN_WEATHER_MAP_API_KEY, WEATHER_API_KEY } from './config.js'
+
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import iconMarker from '../../../src/img/marker-icon.png';
+import iconMarker2 from '../../../src/img/marker-icon-2x.png';
+import iconMarker3 from '../../../src/img/marker-shadow.png';
 
 class Model {
     #state = {}
@@ -36,6 +43,87 @@ class Model {
         this.fetchedCoords = []
         this.primaryLocation = []
         this.savedLocations = []
+        this.map = null
+        this.currentMarker = null;
+    }
+
+    // ================================================================================================
+
+    assignMap() {
+        try {
+            if(this.primaryLocation.length === 0) {
+                return console.log(`assignMap early return: Cannot initialise Leaflet without coords`)
+            }
+            const myCoords = this.primaryLocation.map(x => Number(x))
+            const zoomLevel = 6
+            this.map = L.map('map').setView(myCoords, zoomLevel);
+
+            const tempLayer = L.tileLayer(`https://{s}.tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPEN_WEATHER_MAP_API_KEY}`, {
+                attribution: '&copy; <a href="https://www.openweathermap.org/copyright">OpenWeatherMap</a>',
+            });
+
+            const precipitationLayer = L.tileLayer(`https://{s}.tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPEN_WEATHER_MAP_API_KEY}`, {
+                attribution: '&copy; <a href="https://www.openweathermap.org/copyright">OpenWeatherMap</a>',
+            });
+
+            // Add base map
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+
+            // Add the layers control
+            L.control.layers({
+                "Temperature": tempLayer,
+                "Precipitation": precipitationLayer
+            }, {}).addTo(this.map);
+
+            // Set initial weather layer (e.g., temperature)
+            tempLayer.addTo(this.map);
+
+            this.addMapMarker(myCoords)
+
+            // After re-initialization, force the map to recheck its size
+            this.map.invalidateSize();
+            console.log(`Leaflet was initialised`)
+        } catch (error) {
+            console.error(`💥💥💥 Error: Leaflet initialising`)
+            throw error
+        }
+    }
+
+    // ================================================================================================
+
+    addMapMarker(coords) {
+        // If a marker already exists, remove it
+        if (this.currentMarker) {
+            this.map.removeLayer(this.currentMarker);
+        }
+
+        const icon = L.icon({
+            iconUrl: 'assets/icons/marker-icon.png',   // Point to your images folder
+            shadowUrl: 'assets/icons/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 55],
+            shadowSize: [41, 41],
+            shadowAnchor: [12, 55],
+        });
+
+        // Add new marker
+        this.currentMarker = L.marker(coords, { icon }).addTo(this.map)
+            // .bindPopup('You are here!')
+            // .openPopup();
+    }
+
+    // ================================================================================================
+
+    initMap() {
+        console.log('initMap() is empty');
+    }
+
+    // ================================================================================================
+
+    updateMapView(newCoords, newZoomLevel) {
+        // Update the map view without recreating the map
+        this.map.setView(newCoords, newZoomLevel);
+        this.addMapMarker(newCoords)
     }
 
     // ================================================================================================
@@ -335,7 +423,6 @@ class Model {
 
     // formatting the obj that I am passing here in a neat, ready-to-be-rendered format
     formatDaily(obj) {
-        console.log(obj)
         const myObj = JSON.parse(JSON.stringify(obj))
         myObj.apparent_temperature_max = myObj.apparent_temperature_max.map(temp => Math.floor(temp))
         myObj.apparent_temperature_min = myObj.apparent_temperature_min.map(temp => Math.floor(temp))
@@ -568,6 +655,21 @@ class Model {
         this.pushToLocalStorage(JSON.stringify(this.savedLocations), 'savedLocations')
     }
 
+
 }
 
 export default Model
+
+/* 
+
+// L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            //     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            // }).addTo(map);
+
+            // Add OpenWeatherMap weather tiles (requires API key)
+            // L.tileLayer(`https://{s}.tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid=${OPEN_WEATHER_MAP_API_KEY}`, {
+            //     attribution: '&copy; <a href="https://www.openweathermap.org/copyright">OpenWeatherMap</a>',
+            //     layer: 'wind_new'  // Layer type (temp_new, temperature, clouds, etc.)
+            // }).addTo(map);
+
+*/

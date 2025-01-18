@@ -242,7 +242,6 @@ function defineWeatherType(timeOfTheDay, weathercode) {    // types: string and 
 
         default:
             return `${pathBeginning}/foggy-forest-2.mp4`
-            // return `${pathBeginning}/night-smoke.mp4`
     }
 }
 

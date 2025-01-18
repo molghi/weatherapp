@@ -1,4 +1,4 @@
-import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon, houseIcon, plusIcon } from './view-dependencies/icons.js'
+import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, timeIcon, humidityIcon, cloudCoverIcon, eveningIcon, nightIcon, morningIcon, dayIcon, houseIcon, plusIcon, globeIcon } from './view-dependencies/icons.js'
 
 class View {
     constructor() {
@@ -39,6 +39,7 @@ class View {
         this.dailyTitleEl = document.querySelector('.weather__daily .weather__small-title') // Daily
         this.updatedTitleEl = document.querySelector('.weather__updated span:nth-child(1)') // Updated at
         this.changeLocBtnBoxEl = document.querySelector('.button-box')
+        this.mapDiv = document.querySelector('#map')
 
         this.celsiusSign = "°C"
         this.fahrenheitSign = "°F"
@@ -50,6 +51,8 @@ class View {
         this.nowMinutes = 0
 
         this.boundCloseModal = this.closeModal.bind(this); // Storing bound function
+
+        this.clickHandler = this.clickHandler.bind(this);
     }
 
     // ================================================================================================
@@ -64,7 +67,7 @@ class View {
         coords = coords ? coords : ''
         if(!city && timezone.name) city = timezone.name.split('/')[1].replaceAll('_','')
         this.locationEl.innerHTML = `${city}, <span class="weather__country">${country}<span class="weather__flag">${flag}</span></span>, ${continent}, Terra`
-        this.coordsEl.innerHTML = `(${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`
+        this.coordsEl.innerHTML = `(${coords?.lat.toFixed(2)}° N, ${coords?.lng.toFixed(2)}° E)`
         this.locationTitleEl.innerHTML = `Location:`
         this.addTopIcons()
     }
@@ -184,10 +187,8 @@ class View {
         }, 5000);
 
         this.videoEl.play().catch((error) => {
-            console.log('Error playing bg video:', error);
-            // Fallback to default video if needed
-            // this.videoEl.setAttribute('src', 'assets/videos/night-smoke.mp4');
-            this.videoEl.setAttribute('src', 'assets/videos/foggy-forest-2.mp4');
+            console.error('💥💥💥 Error playing bg video:', error);
+            this.videoEl.setAttribute('src', 'assets/videos/foggy-forest-2.mp4'); // Fallback to default video
             this.videoEl.play();
         })
     }
@@ -391,7 +392,16 @@ class View {
     // ================================================================================================
 
     renderChangeLocBtn() {
-        this.changeLocBtnBoxEl.innerHTML = `<button class="change-location-btn">Change Location</button>`
+        document.querySelector('.change-location-btn').textContent = `Change Location`
+        // this.changeLocBtnBoxEl.innerHTML = `<button class="change-location-btn">Change Location</button>`
+    }
+
+    // ================================================================================================
+
+    renderMapBtn() {
+        document.querySelector('.show-map-btn').innerHTML = globeIcon
+        // const html = `<button class="show-map-btn" title="Show the map">${globeIcon}</button>`
+        // this.changeLocBtnBoxEl.insertAdjacentHTML('afterbegin', html)
     }
 
     // ================================================================================================
@@ -470,7 +480,7 @@ class View {
                     },
                     (error) => {
                         console.error(`Error (${error.code}): ${error.message}`);
-                        reject(error, null); // Reject the Promise with the error
+                        reject(error); // Reject the Promise with the error
                     },
                     {
                         enableHighAccuracy: true,   // Requests more precise location information (e.g., GPS instead of Wi-Fi or cell tower data)
@@ -479,7 +489,7 @@ class View {
                     }
                 );
             } else {
-                const error = "Geolocation is not supported by this browser.";
+                const error = "💥̶💥̶💥̶ Geolocation is not supported by this browser.";
                 console.error(error);
                 reject(new Error(error));
             }
@@ -609,8 +619,8 @@ ${fullname}
     handleClickingResult(handler) {
         document.querySelector('.modal').addEventListener('click', function(e) {
             if(!e.target.classList.contains('modal__result')) return
-            const lat = e.target.dataset.lat
-            const lng = e.target.dataset.lng
+            const lat = e.target.dataset?.lat
+            const lng = e.target.dataset?.lng
             const timezone = e.target.dataset.timezone
             handler(lat, lng, timezone)
         })
@@ -716,11 +726,87 @@ ${fullname}
                 handler('remove', e.target.closest('.added-location').dataset.coords)
                 return
             } 
+
             if(e.target.closest('.added-location')) {    // click not on remove btn --> fetch weather
                 handler('fetch', e.target.closest('.added-location').dataset.coords)
                 return
             }
         })
+    }
+
+    // ================================================================================================
+
+    handleMapBtnClick(handler) {
+        // this.changeLocBtnBoxEl.addEventListener('click', (e) => {
+        //     if(!e.target.closest('.show-map-btn')) return
+        //     handler()
+        // })
+
+        // Store the handler for later use
+        this.handler = handler;
+
+        // Remove any existing event listeners
+        this.changeLocBtnBoxEl.removeEventListener('click', this.clickHandler);
+
+        // Attach the new event listener
+        this.changeLocBtnBoxEl.addEventListener('click', this.clickHandler);
+
+    }
+
+    // The method that handles the click event
+    clickHandler(e) {
+        if (!e.target.closest('.show-map-btn')) return;
+        if (this.handler) this.handler()
+    }
+
+    // ================================================================================================
+
+    handleClosingMap() {
+        const handleClick = (e) => {
+        if (!e.target.closest('.modal__close-btn') && !e.target.classList.contains('modal--maps')) return;
+
+        const modal = document.querySelector('.modal--maps');
+
+        if (modal) {
+            modal.style.backgroundColor = 'transparent';
+            modal.querySelector('.modal__window').style.animation = `bounceReverse 0.1s ease-in-out forwards`;
+
+            setTimeout(() => {
+                this.moveMapDiv('move out')
+                modal.remove();
+                document.removeEventListener('click', handleClick); // Remove the event listener after cleanup
+                console.log(`event listener removed`)
+            }, 500);
+        }
+        };
+
+        document.addEventListener('click', handleClick);
+    }
+
+    // ================================================================================================
+
+    renderMapModal() {
+        const div = document.createElement('div')
+        div.classList.add('modal', 'modal--maps')
+        div.innerHTML = `<div class="modal__window">
+            <div class="modal__close-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+            </div>
+        </div>`
+        document.body.appendChild(div)
+        this.moveMapDiv('move in')
+    }
+
+    // ================================================================================================
+
+    moveMapDiv(flag) {
+        const map = this.mapDiv
+        if(flag === 'move in') {
+            document.querySelector('.modal__window').appendChild(map)
+        }
+        if(flag === 'move out') {
+            document.body.appendChild(map)
+        }
     }
 
 }

@@ -12,7 +12,6 @@ import { renderAll, renderSunriseSunset } from './modules/controller-dependencie
 const Logic = new Model()
 const Visual = new View()
 
-
 // ===========================================================================================================================
 
 
@@ -24,6 +23,7 @@ async function init() {
         Logic.getSavedLocations()  // fetching from local storage: recently saved locations
         Logic.getPrimaryLocation()  // fetching from local storage: the primary location array of lat and lng
         Logic.truncateFetchArrays()  // checks if the arrays that have recent fetches do not grow to be more than length 20: if they more than length 20, i slice them and make them length 20 else they occupy too much space in LS and grow out of hand
+        // Logic.assignMap();
 
         let coords
 
@@ -33,13 +33,16 @@ async function init() {
             coords = JSON.parse(localStorage.getItem('currentLocation'))    // if exists in LS, make this the 'coords' -- if not, prompt geolocation
         } else {
             // Using Browser Geolocation API to determine a user's position 
+            console.log(`🔶 Using Browser Geolocation API`)
             Visual.toggleSpinner('show')
             coords = await Visual.promptGeolocation()   // 'coords' is an array
             Visual.toggleSpinner('hide')
         }
-        // console.log(coords)
+        
         Logic.pushFetchedCoords(coords)
         Logic.pushPrimaryLocation(coords)
+
+        if(Logic.primaryLocation.length > 0) Logic.assignMap();   // initialising Leaflet -- FIX: IT MUST NOT RERUN EVERY HOUR
 
         // fetching timezone and weather:
         const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(coords, coords)
@@ -54,9 +57,8 @@ async function init() {
         runEventListeners()
 
     } catch (error) {
-        console.error(`💥💥💥 Failed to fetch geolocation: ${error.message}`);
-        Visual.toggleSpinner('hide')
-        Visual.showError('Temporary error: Geoloc denied') // this is where I must show the input field so the user could choose a city
+        console.error(`💥💥💥 Something failed: ${error}\n${error.message}`);
+        showCorrectError(error.message)
     }
 }
 init()
@@ -92,6 +94,7 @@ async function fetchTimezoneAndWeather(timezoneCoords, weatherCoords) {
         return [fetchedTimezone, fetchedWeather]
     } catch (error) {
         console.error(error)
+        throw error
     }
 }
 
@@ -115,6 +118,7 @@ function runEventListeners() {
     Visual.handleChangeLocationClick(openModal)
     Visual.handleLocationBtns(locationBtnsHandler)
     Visual.handleSavedLocationsClick(savedLocationsClick)
+    Visual.handleMapBtnClick(showMap)
 }
 
 
@@ -174,6 +178,9 @@ function afterFetching(fetchedWeather, fetchedTimezone) {
 
     // rendering Change Location button
     Visual.renderChangeLocBtn()  
+    
+    // rendering Show Map globe icon button
+    Visual.renderMapBtn()
 
     // putting the bg video there
     const bgVideoPath = Logic.defineWeatherType()  
@@ -232,24 +239,29 @@ async function fetchResultWeather(lat, lng, timezone) {
 
 
 function locationBtnsHandler(typeOfAction, obj) { 
+    console.log(typeOfAction, obj)
     const savedLocationsCoords = Logic.savedLocations.map(locationObj => locationObj.coords.toString())  // stringifying coords, which is an array, to compare it
 
-    if(typeOfAction === 'makePrimary' && savedLocationsCoords.includes(obj.coords.toString())) {
-        makeLocationPrimary(obj)
-    } else {
-        if(savedLocationsCoords.length === 6) 
-            alert(`6 saved locations is the limit!\nRemove some of the existing ones to add new.`)   // can add no more than 6 locations to Saved Locations
-            return
-    }
+    if(savedLocationsCoords.includes(obj.coords.toString())) {   // if Saved Locations already contains this location I'm adding
+        if(typeOfAction === 'makePrimary') return makeLocationPrimary(obj);
+        else return // if it is case 'adding new' and Saved Locations already contains this location, do nothing
+    } else {  // if Saved Locations doesn't contain this location I'm adding
 
-    if(typeOfAction === 'addLocation') {     // clicked on the Add Location btn:
-        if(savedLocationsCoords.includes(obj.coords.toString())) return;    // means location is already on the list
-        else {
+        if(savedLocationsCoords.length >= 6) {
+            return alert(`6 saved locations is the limit!\nRemove some of the existing ones to add new.`)   // can add no more than 6 locations to Saved Locations
+        }
+    
+        if(typeOfAction === 'addLocation') {     // clicked on the Add Location btn:
             Logic.pushSavedLocation(obj)    // adding it to Model and LS
             Visual.addLocation('render', obj)   // adding it in the UI
+            return
+        } 
+
+        if(typeOfAction === 'makePrimary') {  // ...then I need to add this location and make it primary
+            Logic.pushSavedLocation(obj)    // adding it to Model and LS
+            Visual.addLocation('render', obj)   // adding it in the UI
+            makeLocationPrimary(obj)
         }
-    } else {  // clicked on the makePrimary btn:
-        makeLocationPrimary(obj)
     }
 
     // e.target.closest('.btn-add-location').setAttribute('disabled', true)
@@ -282,6 +294,7 @@ function makeLocationPrimary(obj) {
 // ================================================================================================
 
 async function savedLocationsClick(typeOfAction, coords) {
+    console.log(`savedLocationsClick`)
 
     const [lat, lng] = coords.split(',')
 
@@ -306,7 +319,9 @@ async function savedLocationsClick(typeOfAction, coords) {
 
 }
 
+
 // ================================================================================================
+
 
 function updateThisSavedLocation() {
     const objOfData = Visual.getThisLocationData()  // getting this location data from the newly rendered
@@ -314,6 +329,54 @@ function updateThisSavedLocation() {
     document.querySelector('.added-locations').innerHTML = ``  // to re-render
     Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
 }
+
+
+// ================================================================================================
+
+
+function showCorrectError(errorString) {
+    console.log(errorString)
+
+    let errorMessage = 'Error: Something failed.'
+
+    if(errorString === `Failed to fetch the timezone`) {
+        errorMessage = `Error: Failed to fetch the timezone.`
+        Visual.toggleSpinner('hide')
+        Visual.showError(errorMessage) 
+        return
+    }
+
+    if(errorString === `Failed to fetch the weather`) {
+        errorMessage = `Error: Failed to fetch the weather.`
+        Visual.toggleSpinner('hide')
+        Visual.showError(errorMessage) 
+        return
+    } 
+
+    if(errorString === `User denied Geolocation`) {
+        console.log(`ℹ️ User denied Geolocation`)
+        Visual.toggleSpinner('hide')
+        openModal()
+        return
+    }
+
+    Visual.toggleSpinner('hide')
+    Visual.showError(errorMessage) 
+}
+
+
+// ================================================================================================
+
+
+function showMap() {
+    Visual.renderMapModal()  // open modal
+    Visual.handleClosingMap()
+    const newCoords = document.querySelector('.weather__coords').textContent.slice(1,-1).split(',').map(x => Number(x.trim().slice(0,-3))) // getting the coords from the UI
+    const zoomLvl = 6
+    Logic.updateMapView(newCoords, zoomLvl)  // updating the map coords
+    Logic.map.invalidateSize()  // making sure it renders right
+}
+
 
 // ================================================================================================
 

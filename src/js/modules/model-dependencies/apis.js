@@ -7,14 +7,14 @@ async function fetchWeather(coordsArr) {
         const dailyParams = `weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,daylight_duration,sunshine_duration,uv_index_max,precipitation_sum,rain_sum,showers_sum,snowfall_sum,precipitation_hours,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant`
         const timezoneParams = `Europe%2FIstanbul`
 
-        // temperature_2m,precipitation_probability,precipitation,weathercode // hourly
-        // weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,uv_index_clear_sky_max,precipitation_hours,precipitation_probability_max // daily
-
         Visual.toggleSpinner()
 
         const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${coordsArr[0]}&longitude=${coordsArr[1]}&hourly=${hourlyParams}&daily=${dailyParams}&current_weather=true&past_days=7&timezone=${timezoneParams}` 
         const response = await fetch(API_URL)
-        if(!response.ok) throw new Error('>> Failed to fetch the weather')
+        if(!response.ok) {
+            console.error('Weather fetch response not OK:', response.status, response.statusText);
+            throw new Error('Failed to fetch the weather')
+        }
 
         Visual.toggleSpinner('hide')
 
@@ -28,7 +28,7 @@ async function fetchWeather(coordsArr) {
             daily_units: data.daily_units,
             elevation: data.elevation,
             hourly: data.hourly,
-            hourly_units: data.hourly_units,
+            hourly_units: data.hourly_units, 
             fetchedAt: {
                 fullTime: new Date(),
                 hoursMinutes: `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`,
@@ -37,9 +37,8 @@ async function fetchWeather(coordsArr) {
         }
         return myObj
     } catch (error) {
-        console.log(error)
-        Visual.toggleSpinner('hide')
-        Visual.showError()
+        console.error(error, error.message)
+        throw error;
     }
 }
 
@@ -52,7 +51,10 @@ async function fetchTimezone(coordsArr) {
         const [lat, lng] = coordsArr
         const API_URL = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${API_KEY}`
         const response = await fetch(API_URL)
-        if(!response.ok) throw new Error('>> Failed to fetch the timezone')
+        if(!response.ok) {
+            console.error('Timezone fetch response not OK:', response.status, response.statusText);
+            throw new Error('Failed to fetch the timezone');
+        }
         const data = await response.json()
         const myObj = {
             continent: data.results[0].components.continent,
@@ -70,7 +72,8 @@ async function fetchTimezone(coordsArr) {
         }
         return myObj
     } catch (error) {
-        console.log(error)
+        console.error(error, error.message)
+        throw error;
     }
 }
 
@@ -80,11 +83,12 @@ async function fetchWeatherByCityName(cityName) {
     try {
         const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=10&language=en&format=json`
         const response = await fetch(API_URL)
-        if(!response.ok) throw new Error('>> Fetching by city name was unsuccessful')
+        if(!response.ok) throw new Error('Fetching by city name was unsuccessful')
         const data = await response.json()
         return data
     } catch (error) {
-        console.error(error)
+        console.error(error, error.message)
+        throw error;
     }
 }
 
