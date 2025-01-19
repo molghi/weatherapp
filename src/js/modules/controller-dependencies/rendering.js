@@ -147,7 +147,7 @@ function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, ind
 
 // ================================================================================================
 
-
+let timeElementTickTimer
 // a dependency of `renderAll` -- making the time element re-render every minute
 function tickTime(fetchedTimezone) {
     const periodicityInMs = 60000
@@ -157,7 +157,9 @@ function tickTime(fetchedTimezone) {
     Visual.nowHours = localTime[0]
     Visual.nowMinutes = localTime[1]
 
-    setInterval(() => {
+    if(timeElementTickTimer) clearInterval(timeElementTickTimer);
+
+    timeElementTickTimer = setInterval(() => {
         // logic:
         Visual.nowMinutes += 1
         if(Visual.nowMinutes >= 60) {

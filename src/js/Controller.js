@@ -15,7 +15,7 @@ const Visual = new View()
 // ===========================================================================================================================
 
 
-async function init() {
+async function init(flag) {
     try {
         Logic.getWeatherFetchesFromLS()  // fetching from local storage: recent weather api fetches
         Logic.getTimezoneFetchesFromLS()  // fetching from local storage: recent timezone api fetches
@@ -42,7 +42,9 @@ async function init() {
         Logic.pushFetchedCoords(coords)
         Logic.pushPrimaryLocation(coords)
 
-        if(Logic.primaryLocation.length > 0) Logic.assignMap();   // initialising Leaflet -- FIX: IT MUST NOT RERUN EVERY HOUR
+        if(flag !== 'refresh') { // 'init' is called with the arg 'refresh' if it refreshes every hour -- but leaflet ignores it else it produces error (multiple initialises of it)
+            if(Logic.primaryLocation.length > 0) Logic.assignMap();   // initialising Leaflet (it should not re-run every hour)
+        }
 
         // fetching timezone and weather:
         const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(coords, coords)
@@ -70,7 +72,7 @@ init()
 // re-fetching and re-rendering the weather every hour
 setInterval(async () => {
     try {
-        await init();
+        await init('refresh');
     } catch (error) {
         console.error('Error during periodic init:', error);
     }
@@ -192,10 +194,8 @@ function afterFetching(fetchedWeather, fetchedTimezone) {
 
 
 function openModal() {
-    Visual.toggleModalWindow('show')  // rendering and showing the modal with the input field focused
-    setTimeout(() => {
-        Visual.handleSearchCitySubmit(fetchAndShowResults)    // handling submission of the form in that modal
-    }, 500);
+    Visual.toggleModalWindow('show')  // rendering and showing the modal with the search form, input field focused
+    Visual.handleSearchCitySubmit(fetchAndShowResults)    // handling submission of the form in that modal
     Visual.handleModalCloseBtnClick()   // handling closing the modal
     
     /* WHAT TO DO
@@ -209,13 +209,23 @@ function openModal() {
 
 
 async function fetchAndShowResults(query) {
-    const parentElement = document.querySelector('.modal__form')  // needed to show the little spinner
-    Visual.clearModalResultsBox()    // clearing all found results in the modal
-    Visual.toggleLittleSpinner('show', parentElement)
-    const response = await Logic.fetchWeatherByCityName(query)  // fetching results
-    Visual.toggleLittleSpinner('hide')
-    Visual.renderResults(response)    // rendering results
-    Visual.handleClickingResult(fetchResultWeather)  // clicking on any result closes the modal, fetches weather, and re-renders the DOM
+    try {
+        const parentElement = document.querySelector('.modal__form')  // needed to show the little spinner
+        Visual.clearModalResultsBox()    // clearing all found results in the modal
+        Visual.toggleLittleSpinner('show', parentElement)
+        const response = await Logic.fetchWeatherByCityName(query)  // fetching results
+        Visual.toggleLittleSpinner('hide')
+        Visual.renderResults(response)    // rendering results
+        Visual.handleClickingResult(fetchResultWeather)  // clicking on any result closes the modal, fetches weather, and re-renders the DOM
+    } catch (error) {
+        console.error(error, error.message)
+        if(error.message.startsWith('Failed')) {
+            Visual.toggleLittleSpinner('hide')
+            if(document.querySelector('.modal__nothing')) document.querySelector('.modal__nothing').remove()
+            const html = `<div class="modal__nothing">Sorry, failed to fetch results.<br><br>Try again later.</div>`
+            document.querySelector('.modal__form').insertAdjacentHTML(`beforeend`, html)
+        }
+    }
 }
 
 
@@ -223,17 +233,21 @@ async function fetchAndShowResults(query) {
 
 
 async function fetchResultWeather(lat, lng, timezone) {
-    Visual.toggleModalWindow('hide')
+    try {
+        Visual.toggleModalWindow('hide')
 
-    Logic.pushPrimaryLocation([lat, lng])
+        Logic.pushPrimaryLocation([lat, lng])
 
-    const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
+        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
 
-    // a sequence of actions that happen after fetching, such as rendering and updating things:
-    afterFetching(fetchedWeather, fetchedTimezone)
+        // a sequence of actions that happen after fetching, such as rendering and updating things:
+        afterFetching(fetchedWeather, fetchedTimezone)
 
-    // running all event listeners
-    runEventListeners()
+        // running all event listeners
+        runEventListeners()
+    } catch (error) {
+        console.error(error)
+    }
 }
 
 
@@ -296,27 +310,34 @@ function makeLocationPrimary(obj) {
 // ================================================================================================
 
 async function savedLocationsClick(typeOfAction, coords) {
-    console.log(`savedLocationsClick`)
+    try {
+        const [lat, lng] = coords.split(',')
 
-    const [lat, lng] = coords.split(',')
+        if(typeOfAction === 'remove') {  // removing saved location
+            Logic.removeFromSavedLocations(lat, lng)  // delete from Model and push this change to LS
+            document.querySelector('.added-locations').innerHTML = ``   // to re-render
+            Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
+        }
 
-    if(typeOfAction === 'remove') {  // removing saved location
-        Logic.removeFromSavedLocations(lat, lng)  // delete from Model and push this change to LS
-        document.querySelector('.added-locations').innerHTML = ``   // to re-render
-        Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
-    }
+        if(typeOfAction === 'fetch') {  // fetching the weather by 'coords' and displaying it
+            const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
 
-    if(typeOfAction === 'fetch') {  // fetching the weather by 'coords' and displaying it
-        const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
+            // a sequence of actions that happen after fetching, such as rendering and updating things:
+            afterFetching(fetchedWeather, fetchedTimezone)
 
-        // a sequence of actions that happen after fetching, such as rendering and updating things:
-        afterFetching(fetchedWeather, fetchedTimezone)
+            // running all event listeners
+            runEventListeners()
 
-        // running all event listeners
-        runEventListeners()
-
-        // because I just clicked on the saved location item and fetched the weather from there, I need to update that element in Saved Locations
-        updateThisSavedLocation()
+            // because I just clicked on the saved location item and fetched the weather from there, I need to update that element in Saved Locations
+            updateThisSavedLocation()
+        }
+    } catch (error) {
+        console.error(error, error.message);
+        // if(error.message === `Failed to fetch the weather`) {
+        if(error.message.startsWith('Failed to fetch')) {
+            Visual.toggleSpinner('hide')
+            alert("Sorry, fetching data failed. Try again later.")
+        }
     }
 
 }
@@ -342,16 +363,28 @@ function showCorrectError(errorString) {
     let errorMessage = 'Error: Something failed.'
 
     if(errorString === `Failed to fetch the timezone`) {
-        errorMessage = `Error: Failed to fetch the timezone.`
+        errorMessage = `Error: Failed to fetch the timezone.<br><br>Showing the last successful fetch...`
         Visual.toggleSpinner('hide')
         Visual.showError(errorMessage) 
+        setTimeout(() => {
+            document.querySelector('.error').style.animation = `bounceOut 0.1s ease-in-out forwards`
+        }, 5000);
+        setTimeout(() => {
+            showLastSuccessfulFetch()
+        }, 6000);
         return
     }
 
     if(errorString === `Failed to fetch the weather`) {
-        errorMessage = `Error: Failed to fetch the weather.`
+        errorMessage = `Error: Failed to fetch the weather.<br><br>Showing the last successful fetch...`
         Visual.toggleSpinner('hide')
         Visual.showError(errorMessage) 
+        setTimeout(() => {
+            document.querySelector('.error').style.animation = `bounceOut 0.1s ease-in-out forwards`
+        }, 5000);
+        setTimeout(() => {
+            showLastSuccessfulFetch()
+        }, 6000);
         return
     } 
 
@@ -366,6 +399,33 @@ function showCorrectError(errorString) {
     Visual.showError(errorMessage) 
 }
 
+
+// ================================================================================================
+
+function showLastSuccessfulFetch() {
+    Visual.toggleSpinner('show')
+
+    if(document.querySelector('.error')) document.querySelector('.error').remove();  // removing the error message
+
+    if(Logic.previousTimezoneFetches.length > 0 && Logic.previousWeatherFetches.length > 0) {  // if length is > 0, then there is some stuff to show
+        const weatherFetch = Logic.previousWeatherFetches[Logic.previousWeatherFetches.length-1]  // getting the last (pushed) one
+        const timezoneFetch = Logic.previousTimezoneFetches[Logic.previousTimezoneFetches.length-1]  // getting the last (pushed) one
+
+        Visual.toggleSpinner('hide')
+
+        // a sequence of actions that USUALLY happen after fetching, such as rendering and updating things: (here based on the cached data)
+        afterFetching(weatherFetch, timezoneFetch)
+
+        // rendering saved locations:
+        if(Logic.savedLocations.length > 0) Logic.savedLocations.forEach(locationObj => Visual.addLocation('render', locationObj)) 
+
+        // running all event listeners
+        runEventListeners()
+    } else {
+        const errorMessage = `Error: Failed to fetch the data.`
+        Visual.showError(errorMessage) 
+    }
+}
 
 // ================================================================================================
 

@@ -3,6 +3,16 @@
 $width: 600px;
 $width2: 200px;
 
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg)
+    }
+
+    100% {
+        transform: rotate(360deg)
+    }
+}
+
 .spinner-wrapper {
     position: absolute;
     top: 50%;
@@ -16,29 +26,6 @@ $width2: 200px;
     left: 50%;
     transform: translateX(-50%);
 }
-
-// 5
-// .spinner-pulse {
-//     width: 4em;
-//     height: 4em;
-//     margin: auto;
-//     background-color: var(--accent);
-//     border-radius: 100%;
-//     animation: pulse 1.5s infinite ease-in-out;
-//     filter: blur(1px);
-// }
-
-// @keyframes pulse {
-//     0% {
-//         transform: scale(0);
-//     }
-
-//     100% {
-//         transform: scale(12.0);
-//         opacity: 0;
-//     }
-// }
-
 
 .spinner-pulse {
     border: 2px solid;
@@ -62,17 +49,6 @@ $width2: 200px;
         transform: translate(-50%, -50%);
     }
 }
-
-@keyframes rotation {
-    0% {
-        transform: rotate(0deg)
-    }
-
-    100% {
-        transform: rotate(360deg)
-    }
-}
-
 
 .spinner-little-pulse {
     border: 2px solid;

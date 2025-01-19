@@ -81,18 +81,25 @@ input::placeholder {
 
 // =============================================================================================
 
+button:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed;
+
+    &:hover {
+        opacity: 0.3 !important;
+    }
+}
+
+// =============================================================================================
 
 //  TO MAKE IT RESPONSIVE
 
 $minwidth: 320px;
-
 $mw: 1170; // the width of the content, the container width
-
 $md1: $mw+12; // 1st breakpoint
 $md2: 992.98; // for tablets, 1024х768px is a size of a little PC monitor or iPad
 $md3: 767.98; // for large phones; less than 768px is the hamburger menu time
 $md4: 479.98; // for small phones
-
 
 // =============================================================================================
 
@@ -101,16 +108,27 @@ $md4: 479.98; // for small phones
     margin: 0 auto;
     width: 100%;
 
-    @media (max-width: $md1+px) {
-        // max-width: 970px;
+    height: 100%;
+    
+    @media (max-width: 1015px) {
+        display: flex;
+        flex-direction: column;
+
+        &>div:nth-child(1) {
+            flex-grow: 1;
+        }
+    }
+}
+
+.section {
+    height: 100%;
+
+    @media (min-height: 900px) {
+        display: flex;
+        align-items: center;
     }
 
-    @media (max-width: $md2+px) {
-        // max-width: 750px;
-    }
-
-    @media (max-width: $md3+px) {
-        // max-width: none;
-        // padding: 0 10px;
+    @media (max-width: 1015px) and (max-height: 1140px) {
+        display: block;
     }
 }

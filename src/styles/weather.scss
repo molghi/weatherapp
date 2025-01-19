@@ -65,7 +65,6 @@
         box-shadow: inset 0 0 0% transparent;
     }
 }
-// blink .5s steps(1, end) .1s
 
 @keyframes blink-pulse {
     0% {
@@ -92,7 +91,6 @@
         display: flex;
         align-items: center;
         column-gap: 40px;
-        // margin-bottom: 40px;
         margin-bottom: 30px;
         flex-wrap: wrap;
         text-align: center;
@@ -155,7 +153,6 @@
 
     &__description {
         flex: 1 1 100%;
-        // font-size: 25px;
         font-size: 22px;
         animation: enlarge-smaller 6s linear 3s infinite;
         &:hover {
@@ -184,9 +181,6 @@
         &:last-child {
             margin-bottom: 0;
         }
-        // @media (max-width: 680px){
-        //     font-size: 18px;
-        // }
         @media (max-width: 420px) {
             font-size: 16px;
         }
@@ -255,10 +249,8 @@
     }
 
     &__location {
-        // font-size: 25px;
         font-size: 22px;
         text-align: center;
-        // margin-bottom: 30px;
         margin-bottom: 25px;
         display: flex;
         column-gap: 17px;
@@ -791,10 +783,8 @@
     }
     &__flag {
         position: absolute;
-        // top: -19px;
         top: -17px;
         right: -20px;
-        // font-size: 22px;
         font-size: 20px;
         animation: rotate-and-rest 10s infinite ease-in-out;
         @media (max-width: 570px) {

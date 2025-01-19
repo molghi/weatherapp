@@ -1,5 +1,4 @@
 
-
 @keyframes blink {
     0% {
         opacity: 1;
@@ -15,28 +14,23 @@
 }
 
 @keyframes move-and-rest {
-
     0%,
     20% {
         transform: rotate(0deg);
     }
-
     /* Start and end of sway */
     10% {
         transform: rotate(-40deg);
     }
-
     /* Sway left */
     15% {
         transform: rotate(30deg);
     }
-
     /* Sway right */
     20%,
     100% {
         transform: rotate(0deg);
     }
-
     /* Rest for the remaining time */
 }
 
@@ -45,8 +39,6 @@
 .title-box {
     max-width: 1400px;
     margin: 0 auto;
-    // padding-top: 10px;
-    // margin-bottom: 10px;
     position: absolute;
     top: 10px;
     left: 10px;
@@ -70,8 +62,6 @@
         }
     }
 
-    .time-day {}
-
     .time-icon,
     svg {
         width: 20px;
@@ -87,7 +77,6 @@
     }
 
     .time-icon {
-        // display: inline-block;
         animation: move-and-rest 10s ease-in-out 5s infinite;
     }
 
@@ -103,13 +92,8 @@
         }
     }
 
-    .sun-word {}
-
-    .sun-time {}
-
     @media (max-width: 850px) {
         position: relative;
         margin-bottom: 10px;
-        // padding: 0 10px;
     }
 }

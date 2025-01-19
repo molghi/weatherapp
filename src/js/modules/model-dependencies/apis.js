@@ -4,8 +4,6 @@ const API_KEY = process.env.API_KEY;
 const OPEN_WEATHER_MAP_API_KEY = process.env.OPEN_WEATHER_MAP_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
-console.log(API_KEY)
-
 async function fetchWeather(coordsArr) {
     try {
         const hourlyParams = `temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,weather_code,cloud_cover,visibility,wind_gusts_10m`
@@ -16,6 +14,7 @@ async function fetchWeather(coordsArr) {
 
         const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${coordsArr[0]}&longitude=${coordsArr[1]}&hourly=${hourlyParams}&daily=${dailyParams}&current_weather=true&past_days=7&timezone=${timezoneParams}` 
         const response = await fetch(API_URL)
+
         if(!response.ok) {
             console.error('Weather fetch response not OK:', response.status, response.statusText);
             throw new Error('Failed to fetch the weather')
@@ -86,6 +85,7 @@ async function fetchTimezone(coordsArr) {
 
 async function fetchWeatherByCityName(cityName) {
     try {
+        // const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=faifaifai&count=10&language=en&format=json`
         const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=10&language=en&format=json`
         const response = await fetch(API_URL)
         if(!response.ok) throw new Error('Fetching by city name was unsuccessful')

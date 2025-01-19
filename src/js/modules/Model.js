@@ -3,6 +3,8 @@ import { fetchWeather, fetchTimezone, fetchWeatherByCityName } from './model-dep
 import myObject from './model-dependencies/weathercodes.js';
 import defineBigIcon from './model-dependencies/defineBigIcon.js';
 import defineWeatherType from './model-dependencies/defineWeatherType.js';
+import giveShortDescription from './model-dependencies/giveShortDescription.js';
+// import { assignMap, addMapMarker, updateMapView } from './model-dependencies/map.js'
 // import { API_KEY, OPEN_WEATHER_MAP_API_KEY, WEATHER_API_KEY } from './config.js'
 
 const API_KEY = process.env.API_KEY;
@@ -16,23 +18,7 @@ import iconMarker2 from '../../../src/img/marker-icon-2x.png';
 import iconMarker3 from '../../../src/img/marker-shadow.png';
 
 class Model {
-    #state = {}
     constructor() {
-        // this.myCoords = [41.0082, 28.9784]  // Istanbul
-        // this.myCoords = [52.5200, 13.4050] // Berlin
-        // this.myCoords = [48.8566, 2.3522] // Paris
-        // this.myCoords = [51.5074, -0.1278] // London
-        // this.myCoords = [40.7128, -74.0060] // New York
-        // this.myCoords = [64.1355, -21.8954] // Reykjavik
-        // this.myCoords = [-33.8688, 151.2093] // Sydney
-        // this.myCoords = [22.3193, 114.1694] // Hong Kong
-        // this.myCoords = [23.5859, 58.4059] // Muscat
-        // this.myCoords = [30.0444, 31.2357] // Cairo
-        // this.myCoords = [24.7136, 46.6753] // Riyadh
-        // this.myCoords = [68.9585, 33.0827] // Murmansk
-        // this.myCoords = [64.5399, 40.5152] // Arkhangelsk
-        this.myCoords = [57.1497, -2.0943] // Aberdeen
-
         this.sunriseTime = 0
         this.offsetInSeconds = 0
         this.sunsetTime = 0
@@ -47,7 +33,7 @@ class Model {
         this.fetchedCoords = []
         this.primaryLocation = []
         this.savedLocations = []
-        this.map = null
+        this.map = null;
         this.currentMarker = null;
     }
 
@@ -104,24 +90,22 @@ class Model {
             iconUrl: 'assets/icons/marker-icon.png',   // Point to your images folder
             shadowUrl: 'assets/icons/marker-shadow.png',
             iconSize: [25, 41],
-            iconAnchor: [12, 55],
+            iconAnchor: [12, 45],
             shadowSize: [41, 41],
-            shadowAnchor: [12, 55],
+            shadowAnchor: [12, 45],
         });
 
         // Add new marker
         this.currentMarker = L.marker(coords, { icon }).addTo(this.map)
-            // .bindPopup('You are here!')
-            // .openPopup();
     }
 
     // ================================================================================================
 
     updateMapView(newCoords, newZoomLevel) {
-        // Update the map view without recreating the map
-        this.map.setView(newCoords, newZoomLevel);
-        this.addMapMarker(newCoords)
-    }
+    // Update the map view without recreating the map
+    this.map.setView(newCoords, newZoomLevel);
+    this.addMapMarker(newCoords)
+}
 
     // ================================================================================================
 
@@ -229,20 +213,13 @@ class Model {
     // ================================================================================================
 
     setSunriseTime(value) {
-        // console.log(value)
         this.sunriseTime = this.convertToCorrectTime(value)
-        // const hours = new Date(value).getHours()
-        // const minutes = new Date(value).getMinutes()
-        // this.sunriseTime = `${hours}:${minutes}`
     }
 
     // ================================================================================================
     
     setSunsetTime(value) {
         this.sunsetTime = this.convertToCorrectTime(value)
-        // const hours = new Date(value).getHours()
-        // const minutes = new Date(value).getMinutes()
-        // this.sunsetTime = `${hours}:${minutes}`
     }
 
     // ================================================================================================
@@ -549,8 +526,7 @@ class Model {
             return [val1, val2, val3, val4]
         })
         
-        // this.degreesFahrenheit  is an arr of Fahrenheit values to render
-        // this.degrees  is an arr of Celsius values to render
+        // this.degreesFahrenheit  is an arr of Fahrenheit values to render   ---   this.degrees  is an arr of Celsius values to render
     }
 
     // ================================================================================================
@@ -592,56 +568,7 @@ class Model {
     // ================================================================================================
 
     giveShortDescription(weathercode) {
-        weathercode = String(weathercode)
-        let shortDesc = ''
-        switch (weathercode) {
-            case '0':
-                shortDesc = 'Clear'
-                break;
-            case '1':
-            case '2':
-            case '3':
-                shortDesc = 'Cloudy'
-                break;
-            case '45':
-            case '48':
-                shortDesc = 'Foggy'
-                break;
-            case '51':
-            case '53':
-            case '55':
-            case '56':
-            case '57':
-                shortDesc = 'Drizzle'
-                break;
-            case '61':
-            case '63':
-            case '65':
-            case '66':
-            case '67':
-            case '80':
-            case '81':
-            case '82':
-                shortDesc = 'Rain'
-                break;
-            case '71':
-            case '73':
-            case '75':
-            case '77':
-            case '85':
-            case '86':
-                shortDesc = 'Snow'
-                break;
-            case '95':
-            case '96':
-            case '99':
-                shortDesc = 'Thunder'
-                break;
-            default:
-                shortDesc = ''
-                break;
-        }
-        return shortDesc
+        return giveShortDescription(weathercode)
     }
 
     // ================================================================================================
@@ -655,18 +582,4 @@ class Model {
 
 }
 
-export default Model
-
-/* 
-
-// L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            //     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            // }).addTo(map);
-
-            // Add OpenWeatherMap weather tiles (requires API key)
-            // L.tileLayer(`https://{s}.tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid=${OPEN_WEATHER_MAP_API_KEY}`, {
-            //     attribution: '&copy; <a href="https://www.openweathermap.org/copyright">OpenWeatherMap</a>',
-            //     layer: 'wind_new'  // Layer type (temp_new, temperature, clouds, etc.)
-            // }).addTo(map);
-
-*/
+export default Model 
