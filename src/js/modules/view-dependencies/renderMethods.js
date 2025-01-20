@@ -22,6 +22,7 @@ function renderLocationAndCoords(obj, locationEl, coordsEl, locationTitleEl) {
 
 // adding the Make Primary and Add to Cities List btn-icons ---> called only in 'renderLocationAndCoords'
 function addTopIcons() {
+    if(document.querySelector('.weather__icons')) document.querySelector('.weather__icons').remove()
     const parentEl = document.querySelector('.weather__top')
     const div = document.createElement('div')
     div.classList.add('weather__icons')
@@ -80,24 +81,40 @@ function renderTimeIcon(time, timeboxIconEl) {
 // ================================================================================================
 
 // rendering bg video
-function showBackgroundVideo(path, videoBoxEl, videoEl) {
-    videoBoxEl.style.animation = 'fadein 5s linear'
-    filterVideo('default', videoEl)   // reset video filters
-    videoEl.pause();   // Pause current video
-    videoEl.querySelector('source').setAttribute('src', path)
-    videoEl.load()   // Reload the video with the new source
-    videoEl.currentTime = 0;   // Start from the beginning
+async function showBackgroundVideo(path, videoBoxEl, videoEl) {
+    try {
+        videoBoxEl.style.animation = 'fadein 5s linear';   // set animation
+        filterVideo('default', videoEl);   // Reset video filters
+        videoEl.pause();   // Pause current video
 
-    setTimeout(() => {
-        videoBoxEl.style.animation = 'none'
-    }, 5000);
+        videoEl.querySelector('source').setAttribute('src', path);  // set the src to the new video
 
-    videoEl.play().catch((error) => {
+        // Wait for the video to load
+        await new Promise((resolve, reject) => {
+            videoEl.oncanplaythrough = resolve;  // Resolves when the video is ready to play
+            videoEl.onerror = reject;  // Rejects if there's an error in loading
+            videoEl.load();  // This will reload the video
+        });
+
+        // Now playing the video after it's ready
+        await videoEl.play();
+
+        setTimeout(() => {
+            videoBoxEl.style.animation = 'none';  // resetting animation
+        }, 5000);
+
+    } catch (error) {
         console.error('💥💥💥 Error playing bg video:', error);
         videoEl.setAttribute('src', 'assets/videos/foggy-forest-2.mp4');   // Fallback to default video
-        videoEl.load()
-        videoEl.play();
-    })
+        // Wait for the fallback video to load
+        await new Promise((resolve, reject) => {
+            videoEl.oncanplaythrough = resolve;
+            videoEl.onerror = reject;
+            videoEl.load();
+        });
+        // Now playing the fallback video
+        await videoEl.play();
+    }
 }
 
 // ================================================================================================

@@ -191,6 +191,7 @@ function renderSunriseSunset(fetchedWeather) {
    const [nowHours, nowMinutes] = nowTimeString.split(':')
    const [sunriseHours, sunriseMinutes] = sunriseTime.split(':')
    const [sunsetHours, sunsetMinutes] = sunsetTime.split(':')
+
    // Cases:
    if(+nowHours <= +sunriseHours) {
     if(+nowHours === +sunriseHours && +nowMinutes < +sunriseMinutes) {
@@ -231,6 +232,7 @@ function renderSunriseSunset(fetchedWeather) {
 // a dependency of `renderSunriseSunset` -- rendering the sunrise (.sun-time) 
 function renderSunrise(fetchedWeather,type='ofThisDay') {
     const tomorrowFormatted = Logic.getTomorrowString()   // formatted like: '2025-01-12'
+
     if(type==='ofTomorrow') {
         console.log(`tomorrowFormatted:`,tomorrowFormatted)
         // get the sunrise of tomorrow, save it to Model.sunriseTime, calc time until it, render it

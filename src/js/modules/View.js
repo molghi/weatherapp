@@ -5,7 +5,6 @@ import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, tim
 import { renderLocationAndCoords, renderTimeElement, renderSuntime, renderTimeIcon, showBackgroundVideo, renderBigIcon, renderPrecipitation, renderHourly, renderDaily, renderDaylightSunshine, showError, rerenderDegrees, renderModalWindow, renderResults, addLocation, renderMapModal, renderTempAndDesc, renderWind, renderUvIndex, renderDayTime, renderUpdatedAt, renderFeelsLike, renderHumidity, renderCloudCover, renderChangeLocBtn } from './view-dependencies/renderMethods.js'
 
 // more importing
-import { handleTemperatureClick, handleClickingResult, handleSavedLocationsClick } from './view-dependencies/eventHandlers.js'
 import { promptGeolocation } from './view-dependencies/geolocation.js'
 import { toggleSpinner, toggleLittleSpinner, toggleModalWindow } from './view-dependencies/togglingThings.js'
 
@@ -60,10 +59,14 @@ class View {
         this.nowHours = 0
         this.nowMinutes = 0
 
+        // Storing bound function for event listeners to be able to remove them (with removeEventListener)
         this.changeLocationHandler = this.changeLocationHandler.bind(this)
         this.formHandler = this.formHandler.bind(this)
-        this.boundCloseModal = this.closeModal.bind(this); // Storing bound function
+        this.boundCloseModal = this.closeModal.bind(this); 
         this.clickHandler = this.clickHandler.bind(this);
+        this.temperatureClickHandler = this.temperatureClickHandler.bind(this)
+        this.resultClickHandler = this.resultClickHandler.bind(this)
+        this.savedLocationsClickHandler = this.savedLocationsClickHandler.bind(this)
 
         this.savedLocTempCelsius = ''
     }
@@ -133,8 +136,8 @@ class View {
 
     // ================================================================================================
 
-    showBackgroundVideo(path) {
-        showBackgroundVideo(path, this.videoBoxEl, this.videoEl)
+    async showBackgroundVideo(path) {
+        await showBackgroundVideo(path, this.videoBoxEl, this.videoEl)
     }
 
     // ================================================================================================
@@ -322,7 +325,7 @@ class View {
     // ================================================================================================
 
     promptGeolocation() {
-        promptGeolocation()
+        return promptGeolocation()
     }
 
 
@@ -331,26 +334,58 @@ class View {
     // ================================================================================================
     // ================================================================================================
     // ================================================================================================
+    
+    
 
-
-
+    
+    // ONLY EVENT LISTENERS BELOW:
+    // ================================================================================================
     
     // handling click on any temp (Cels) element --> upon it the Fahr/Cels convertion happens
     handleTemperatureClick(handler) {
-        handleTemperatureClick(handler, this.weatherBoxEl)
+        this.temperatureClickCallback = handler 
+        this.weatherBoxEl.removeEventListener('click', this.temperatureClickHandler)
+        this.weatherBoxEl.addEventListener('click', this.temperatureClickHandler)
+    }
+
+    temperatureClickHandler(e) {
+        if(!e.target.closest('.weather__temp') && !e.target.closest('.weather__day-temp') && !e.target.closest('.weather__hour-temp')) return  
+        this.temperatureClickCallback()
     }
 
     // ================================================================================================
 
     // handle clicking one result in city search form (upon changing location)
     handleClickingResult(handler) {
-        handleClickingResult(handler)
+        this.resultClickCallback = handler
+        document.querySelector('.modal').removeEventListener('click', this.resultClickHandler)
+        document.querySelector('.modal').addEventListener('click', this.resultClickHandler)
+    }
+
+    resultClickHandler(e) {
+        if(!e.target.classList.contains('modal__result')) return
+        const lat = e.target.dataset?.lat
+        const lng = e.target.dataset?.lng
+        const timezone = e.target.dataset?.timezone
+        this.resultClickCallback(lat, lng, timezone)
     }
 
     // ================================================================================================
 
     handleSavedLocationsClick(handler) {
-        handleSavedLocationsClick(handler)
+        this.savedLocationsClickCallback = handler
+        document.querySelector('.added-locations').removeEventListener('click', this.savedLocationsClickHandler)
+        document.querySelector('.added-locations').addEventListener('click', this.savedLocationsClickHandler)
+    }
+
+    savedLocationsClickHandler(e) {
+        if(!e.target.closest('.added-location')) return;
+        if(e.target.classList.contains('added-location-remove-btn')) {    // click on remove btn --> removing the item
+            return this.savedLocationsClickCallback('remove', e.target.closest('.added-location').dataset.coords);
+        } 
+        if(e.target.closest('.added-location')) {    // click not on remove btn --> fetch weather
+            return this.savedLocationsClickCallback('fetch', e.target.closest('.added-location').dataset.coords);
+        }
     }
 
     // ================================================================================================
@@ -380,10 +415,9 @@ class View {
     // ================================================================================================
 
     handleChangeLocationClick(handler) {
-        const btn = document.querySelector('.change-location-btn')
         this.changeLocationCallback = handler
-        btn.removeEventListener('click', this.changeLocationHandler)
-        btn.addEventListener('click', this.changeLocationHandler)
+        document.querySelector('.change-location-btn').removeEventListener('click', this.changeLocationHandler)
+        document.querySelector('.change-location-btn').addEventListener('click', this.changeLocationHandler)
     }
 
     changeLocationHandler() {
@@ -403,7 +437,7 @@ class View {
     */
 
     handleSearchCitySubmit(handler) {
-        if(!document.querySelector('.modal__form')) return console.log('No form')
+        if(!document.querySelector('.modal__form')) return console.log('No form');
         this.formHandlerCallback = handler
         document.querySelector('.modal__form').removeEventListener('submit', this.formHandler)
         document.querySelector('.modal__form').addEventListener('submit', this.formHandler)
@@ -435,17 +469,12 @@ class View {
 
     // btns: Make Primary and Add a Location to the list
     handleLocationBtns(handler) {
-        this.removeLocationBtnsHandler() // removing any existing listener first (because I re-render the element with these buttons frequently)
-        this.boundTopLocationBtnsHandler = (e) => this.topLocationBtnsHandler(e, handler) // binding the handler to topLocationBtnsHandler and storing the reference
-        this.weatherBoxEl.addEventListener('click', this.boundTopLocationBtnsHandler)
-    }
-
-    // dependency of 'handleLocationBtns'
-    removeLocationBtnsHandler() {
-        if (this.boundTopLocationBtnsHandler) {
+        if (this.boundTopLocationBtnsHandler) {   // removing any existing listener first because I re-render the element with these buttons frequently
             this.weatherBoxEl.removeEventListener('click', this.boundTopLocationBtnsHandler)
             this.boundTopLocationBtnsHandler = null // cleaning up reference
         }
+        this.boundTopLocationBtnsHandler = (e) => this.topLocationBtnsHandler(e, handler) // binding the handler to topLocationBtnsHandler and storing the reference
+        this.weatherBoxEl.addEventListener('click', this.boundTopLocationBtnsHandler)
     }
 
     topLocationBtnsHandler(e, handler) {
