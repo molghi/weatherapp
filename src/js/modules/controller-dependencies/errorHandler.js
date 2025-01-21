@@ -1,19 +1,19 @@
-import { Logic, Visual } from '../../Controller.js';
+import { Logic, Visual, runEventListeners } from '../../Controller.js';
+import { openModal } from './smallFuncs.js'
+import afterFetching from './renderAfterFetch.js'
 
 export default function showCorrectError(errorString) {
-    console.log(errorString)
-
-    let errorMessage = 'Error: Something failed.'
+    let errorMessage = 'Error: Something failed.'  // default error msg
 
     if(errorString === `Failed to fetch the timezone`) {
         errorMessage = `Error: Failed to fetch the timezone.<br><br>Showing the last successful fetch...`
         Visual.toggleSpinner('hide')
         Visual.showError(errorMessage) 
         setTimeout(() => {
-            document.querySelector('.error').style.animation = `bounceOut 0.1s ease-in-out forwards`
+            document.querySelector('.error').style.animation = `bounceOut 0.1s ease-in-out forwards`   // fading out (but not removing yet) the error msg
         }, 5000);
         setTimeout(() => {
-            showLastSuccessfulFetch()
+            showLastSuccessfulFetch()   // rendering the data of the last successful fetch (if there is one)
         }, 6000);
         return
     }
@@ -23,18 +23,18 @@ export default function showCorrectError(errorString) {
         Visual.toggleSpinner('hide')
         Visual.showError(errorMessage) 
         setTimeout(() => {
-            document.querySelector('.error').style.animation = `bounceOut 0.1s ease-in-out forwards`
+            document.querySelector('.error').style.animation = `bounceOut 0.1s ease-in-out forwards`   // fading out (but not removing yet) the error msg
         }, 5000);
         setTimeout(() => {
-            showLastSuccessfulFetch()
+            showLastSuccessfulFetch()   // rendering the data of the last successful fetch (if there is one)
         }, 6000);
         return
     } 
 
     if(errorString === `User denied Geolocation`) {
-        console.log(`ℹ️ User denied Geolocation`)
+        // console.log(`ℹ️ User denied Geolocation`)
         Visual.toggleSpinner('hide')
-        openModal()
+        openModal()   // showing the modal with Search By City
         return
     }
 
@@ -46,6 +46,7 @@ export default function showCorrectError(errorString) {
 // ================================================================================================
 
 
+// I call it in 'showCorrectError'
 function showLastSuccessfulFetch() {
     Visual.toggleSpinner('show')
 
@@ -62,7 +63,7 @@ function showLastSuccessfulFetch() {
 
         // rendering saved locations:
         document.querySelector('.added-locations').innerHTML = ''   // making sure it's empty first
-        if(Logic.savedLocations.length > 0) Logic.savedLocations.forEach(locationObj => Visual.addLocation('render', locationObj)) 
+        if(Logic.savedLocations.length > 0) Logic.savedLocations.forEach(locationObj => Visual.addLocation('render', locationObj))   // rendering 
 
         // running all event listeners
         runEventListeners()

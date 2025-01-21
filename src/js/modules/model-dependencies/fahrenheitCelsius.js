@@ -1,3 +1,5 @@
+
+// converts 'value' to F/C and returns it
 function convertTempUnits(value, flag) {
     if(flag === 'toFahrenheit') {
         return (value * 9/5) + 32
@@ -5,14 +7,6 @@ function convertTempUnits(value, flag) {
         return (value - 32) * 5/9
     }
 }
-
-// ================================================================================================
-
-// minor helper functions / dependencies
-
-const getTodayString = () => `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
-
-const getNowTime = () => `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`
 
 // ================================================================================================
 
@@ -38,21 +32,24 @@ function setAllDegrees(fetchedWeather, degrees, degreesFahrenheit) {
         return [val1, val2, val3, val4]
     })
         
-    // degreesFahrenheit  is an arr of Fahrenheit values to render   ---   degrees  is an arr of Celsius values to render
+    // after that, 'degreesFahrenheit' is an arr of Fahrenheit values ready to render   ---   'degrees' is an arr of Celsius values ready to render
 }
 
 // ================================================================================================
 
-// gets you an object of all degree values that are in the UI now (main, feels like, in hourly and daily) -- based on the fetch response -- dependency of 'setAllDegrees'
+// dependency of 'setAllDegrees' -- this fn gets you an object of all degree values that are in the UI now (main, feels like, in hourly and daily) -- based on the fetch response
 function getObjectOfDegrees(fetchedWeather, degrees) {
     degrees.tempNow = fetchedWeather.temp
         
     const today = getTodayString()
     let now = getNowTime()
 
-    if(new Date().getHours() < 10) now = '0' + now
+    if(new Date().getHours() < 10) now = '0' + now   // failsafe
+
     const nowString = `${today}T${now}`.split(':')[0]
-    let indexInHourly = fetchedWeather.hourly.time.findIndex(x => x.startsWith(nowString))
+
+    let indexInHourly = fetchedWeather.hourly.time.findIndex(x => x.startsWith(nowString))    // we need the index of the present moment to navigate in fetched results
+
     degrees.feelsLike = fetchedWeather.hourly.apparent_temperature[indexInHourly]
     degrees.hourly = []
     degrees.daily = []
@@ -65,9 +62,9 @@ function getObjectOfDegrees(fetchedWeather, degrees) {
         indexInHourly += 1
     }
         
+    let indexOfDaily = fetchedWeather.daily.time.findIndex(x => x === today)    // we need the index of today
+    
     // pushing Daily's (3 for 3 days)
-    let indexOfDaily = fetchedWeather.daily.time.findIndex(x => x === today)
-
     for (let i = 0; i < 3; i++) {
         indexOfDaily += 1
         const feelsLikeMin = fetchedWeather.daily.apparent_temperature_min[indexOfDaily]
@@ -80,7 +77,11 @@ function getObjectOfDegrees(fetchedWeather, degrees) {
 
 // ================================================================================================
 
+// dependencies of 'getObjectOfDegrees'
+const getTodayString = () => `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
+const getNowTime = () => `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`
 
+// ================================================================================================
 
 
 export { setAllDegrees, convertTempUnits }

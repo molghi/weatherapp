@@ -3,62 +3,44 @@ import { Logic, Visual } from '../../Controller.js'
 
 // main function here
 function renderAll(fetchedTimezone, fetchedWeather) {
-
-    // setting offset of the current timezone
-    Logic.offsetInSeconds = fetchedTimezone.timezone.offset_sec
-    
-    // rendering everything in .title-box
-    renderTitleBox(fetchedTimezone, fetchedWeather)
-
-    // making the time element re-render every minute
-    tickTime(fetchedTimezone)
-
-    // rendering the Daily block
-    renderDaily(fetchedWeather)
-    
-    // rendering the Hourly block
-    const [formattedToRender, indexOfNowInHourly, todayFormatted] = renderHourly(fetchedWeather)
-
-    // rendering what's above the Hourly block
-    renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted)
+    Logic.offsetInSeconds = fetchedTimezone.timezone.offset_sec  // setting offset of the current timezone
+    renderTitleBox(fetchedTimezone, fetchedWeather)  // rendering everything in .title-box
+    tickTime(fetchedTimezone)  // making the time element re-render every minute
+    renderDaily(fetchedWeather)  // rendering the Daily block
+    const [formattedToRender, indexOfNowInHourly, todayFormatted] = renderHourly(fetchedWeather)  // rendering the Hourly block
+    renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted)  // rendering what's above the Hourly block
 }
-
 
 // ================================================================================================
 
-
-// a dependency of `renderAll` -- renders almost all in .title-box:  .time-day, .time-icon, .time-element -- except sunrise/sunset
+// dependency of `renderAll` -- renders almost all in .title-box:  .time-day, .time-icon, .time-element -- except sunrise/sunset
 function renderTitleBox(fetchedTimezone, fetchedWeather) {
 
     // rendering .time-element & rendering .time-icon  (local time at the location) -- .time-element is where the time is, .time-icon is the icon for the current time
-    const localTime = Logic.getLocalTime(Logic.offsetInSeconds)    // localTime is an array [hoursNum, minutesNum]
+    const localTime = Logic.getLocalTime(Logic.offsetInSeconds)    // getting the local time; localTime is an array [hoursNum, minutesNum]
     Logic.timeNow = localTime
-    const dateNowAtLocation = Logic.getLocalDay(Logic.offsetInSeconds)
+    const dateNowAtLocation = Logic.getLocalDay(Logic.offsetInSeconds)    // getting the local date
     Visual.renderTimeElement(dateNowAtLocation, localTime) 
     Visual.renderTimeIcon(localTime) 
 
-    // rendering .time-day -- word describing what time of the day it is now
+    // rendering .time-day -- the word describing what time of the day it is now there
     const dayTime = Logic.defineDayTime(localTime[0])
     Logic.timeOfTheDay = dayTime   // needed to define the bg video
     Visual.renderDayTime(dayTime)
 }
 
-
 // ================================================================================================
 
-
-// a dependency of `renderAll` -- renders Hourly
+// dependency of `renderAll` -- renders Hourly
 function renderHourly(fetchedWeather) {
     const hourlyObj = {}
-    const upcomingHours = 48  // amount of upcoming hours to have data about
+    const upcomingHours = 48  // amount of upcoming hours to have the data about
 
     const nowDay = Logic.getLocalDay(Logic.offsetInSeconds).split('/').reverse().join('-')
     const nowTime = Logic.getLocalTime(Logic.offsetInSeconds)[0].toString().padStart(2,0)
-    const todayFormatted = `${nowDay}T${nowTime}:00`   // like: "2025-01-10T21:00"
-    // const todayFormatted = `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}T${(new Date().getHours()).toString().padStart(2,0)}:00`    // like: "2025-01-10T21:00"
+    const todayFormatted = `${nowDay}T${nowTime}:00`   // formatted like: "2025-01-10T21:00"
 
     const indexOfNowInHourly = fetchedWeather.hourly.time.findIndex(dateTimeStr => dateTimeStr === todayFormatted)   // because 'hourly' has 300+ elements representing all hours since 7 days ago
-// console.log(`indexOfNowInHourly:`, indexOfNowInHourly)
     
     Object.keys(fetchedWeather.hourly).forEach(key => hourlyObj[key] = fetchedWeather.hourly[key].slice(indexOfNowInHourly, indexOfNowInHourly+upcomingHours))  // populating `hourlyObj`
     
@@ -69,22 +51,18 @@ function renderHourly(fetchedWeather) {
     return [formattedToRender, indexOfNowInHourly, todayFormatted]
 }
 
-
 // ================================================================================================
 
-
-// a dependency of `renderAll` -- renders Daily
+// dependency of `renderAll` -- renders Daily
 function renderDaily(fetchedWeather) {
-    const dateNowAtLocation = Logic.getLocalDay(Logic.offsetInSeconds).split('/').reverse().join('-')
+    const dateNowAtLocation = Logic.getLocalDay(Logic.offsetInSeconds).split('/').reverse().join('-')   // getting the local date at the location
     const dailyFormatted = Logic.formatDaily(fetchedWeather.daily)  // 'dailyFormatted' is an obj of props selected by me; I just make it formatted ready to be rendered
     Visual.renderDaily(dateNowAtLocation, dailyFormatted)
 }
 
-
 // ================================================================================================
 
-
-// a dependency of `renderAll`
+// dependency of `renderAll`
 function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, indexOfNowInHourly, todayFormatted) {
     // NOTE: 'formattedToRender' is an obj of props selected by me neatly formatted ready to render -- produced by 'renderHourly' -- each array in it has 48 elements representing 48 hours -- the 1st el at index 0 is now-hours
 
@@ -108,7 +86,6 @@ function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, ind
 
     // rendering when it was fetched
     const fetchedAt = fetchedWeather.fetchedAt.hoursMinutes
-    // const fetchedAt = Logic.timeNow
     const fetchedAtDate = fetchedWeather.fetchedAt.date
     Visual.renderUpdatedAt(fetchedAt, fetchedAtDate)
 
@@ -144,15 +121,14 @@ function renderMainBlock(fetchedWeather, fetchedTimezone, formattedToRender, ind
     Visual.renderBigIcon(bigIconPath)
 }
 
-
 // ================================================================================================
 
-let timeElementTickTimer
-// a dependency of `renderAll` -- making the time element re-render every minute
+// dependency of `renderAll` -- making the time element re-render every minute
+let timeElementTickTimer  // to prevent overlapping scenarios
 function tickTime(fetchedTimezone) {
-    const periodicityInMs = 60000
+    const periodicityInMs = 60000   // =60sec
     const offsetInSeconds = fetchedTimezone.timezone.offset_sec
-    const localTime = Logic.getLocalTime(offsetInSeconds)   // 'localTime' is an array
+    const localTime = Logic.getLocalTime(offsetInSeconds)   // getting local time; 'localTime' is an array
 
     Visual.nowHours = localTime[0]
     Visual.nowMinutes = localTime[1]
@@ -160,7 +136,7 @@ function tickTime(fetchedTimezone) {
     if(timeElementTickTimer) clearInterval(timeElementTickTimer);
 
     timeElementTickTimer = setInterval(() => {
-        // logic:
+        // setting the logic:
         Visual.nowMinutes += 1
         if(Visual.nowMinutes >= 60) {
             Visual.nowMinutes = 0
@@ -178,9 +154,7 @@ function tickTime(fetchedTimezone) {
     }, periodicityInMs);
 }
 
-
 // ================================================================================================
-
 
 // rendering sunrise or sunset, depending on the current time
 function renderSunriseSunset(fetchedWeather) {
@@ -194,68 +168,89 @@ function renderSunriseSunset(fetchedWeather) {
 
    // Cases:
    if(+nowHours <= +sunriseHours) {
-    if(+nowHours === +sunriseHours && +nowMinutes < +sunriseMinutes) {
-        console.log(`now is before sunrise -- render sunrise (1)`)
-        return renderSunrise(fetchedWeather)
-    }
-    console.log(`now is before sunrise -- render sunrise (2)`)
+        if(+nowHours === +sunriseHours && +nowMinutes <= +sunriseMinutes) {
+            // console.log(`now is before sunrise -- render sunrise`)
+            renderSunrise(fetchedWeather)
+        } else if(+nowHours === +sunriseHours && +nowMinutes > +sunriseMinutes) {
+            // console.log(`now is after sunrise -- render sunset`)
+            renderSunset(fetchedWeather,nowTimeString,sunsetTime)
+        } else {
+            // console.log(`now is before sunrise -- render sunrise`)
+            renderSunrise(fetchedWeather)
+        }
+   } 
+   
+   else if(+nowHours === +sunriseHours && +nowMinutes === +sunriseMinutes) {
+    // console.log(`it is sunrise now -- render sunrise`)
     renderSunrise(fetchedWeather)
-   } else if(+nowHours === +sunriseHours && +nowMinutes === +sunriseMinutes) {
-    console.log(`it is sunrise now -- render sunrise`)
-    renderSunrise(fetchedWeather)
-   } else if(+nowHours === +sunriseHours && +nowMinutes > +sunriseMinutes) {
-    console.log(`it is after sunrise now -- render sunset`)
+   } 
+   
+   else if(+nowHours === +sunriseHours && +nowMinutes > +sunriseMinutes) {
+    // console.log(`it is after sunrise now -- render sunset`)
     renderSunset(fetchedWeather,nowTimeString,sunsetTime)
-   } else if(+nowHours > +sunriseHours && (+nowHours <= +sunsetHours)) {
-    if(+nowHours < +sunsetHours) {
-        renderSunset(fetchedWeather,nowTimeString,sunsetTime)
-        return console.log(`render sunset (1)`)
-    } else if(+nowHours === +sunsetHours && +nowMinutes <= +sunsetMinutes) {
-        renderSunset(fetchedWeather,nowTimeString,sunsetTime)
-        return console.log(`render sunset (2)`)
-    }
+   }
+   
+   else if(+nowHours > +sunriseHours && (+nowHours <= +sunsetHours)) {
+        if(+nowHours < +sunsetHours) {
+            renderSunset(fetchedWeather,nowTimeString,sunsetTime)
+            // console.log(`render sunset`)
+            return 
+        } else if(+nowHours === +sunsetHours && +nowMinutes <= +sunsetMinutes) {
+            renderSunset(fetchedWeather,nowTimeString,sunsetTime)
+            // console.log(`render sunset`)
+            return 
+        }
     renderSunset(fetchedWeather,nowTimeString,sunsetTime)
-    console.log(`render sunset (3)`)
-   } else if((+nowHours >= 0 && +nowHours < +sunriseHours) || (+nowHours === +sunriseHours && +nowMinutes <= +sunriseMinutes)) {
+    // console.log(`render sunset`)
+   } 
+   
+   else if((+nowHours >= 0 && +nowHours < +sunriseHours) || (+nowHours === +sunriseHours && +nowMinutes <= +sunriseMinutes)) {
     renderSunrise(fetchedWeather)
-    console.log(`render sunrise of today (it's past midnight but before the sunrise)`)
-   } else {
-    console.log('render sunrise of the next day')
+    // console.log(`render sunrise of today -- it's past midnight but before the sunrise`)
+   } 
+   
+   else {
+    // console.log('render sunrise of the next day')
     renderSunrise(fetchedWeather)
    }
 }
 
-
 // ================================================================================================
 
-
-// a dependency of `renderSunriseSunset` -- rendering the sunrise (.sun-time) 
+// dependency of `renderSunriseSunset` -- rendering the sunrise (.sun-time) 
 function renderSunrise(fetchedWeather,type='ofThisDay') {
     const tomorrowFormatted = Logic.getTomorrowString()   // formatted like: '2025-01-12'
 
-    if(type==='ofTomorrow') {
-        console.log(`tomorrowFormatted:`,tomorrowFormatted)
-        // get the sunrise of tomorrow, save it to Model.sunriseTime, calc time until it, render it
-    } else {
-        const indexOfTomorrow = fetchedWeather.daily.sunrise.findIndex(sunriseStr => sunriseStr.startsWith(tomorrowFormatted))
-        const sunriseRaw = fetchedWeather.daily.sunrise[indexOfTomorrow]
-        const sunriseRawTime = new Date(sunriseRaw).getTime()
-        const timeUntilSunrise = Logic.calcSunrise(sunriseRawTime)
-        Visual.renderSuntime(timeUntilSunrise, 'sunrise', sunriseRaw.slice(-5))  // Visual.renderSuntime -- 1st arg is an array (time: hrs and min), 2nd arg is a string ('sunrise'/'sunset')
-    }
+    const indexOfTomorrow = fetchedWeather.daily.sunrise.findIndex(sunriseStr => sunriseStr.startsWith(tomorrowFormatted))  // finding the index of tomorrow in 'daily'
+    const sunriseRaw = fetchedWeather.daily.sunrise[indexOfTomorrow]   // formatted like '2025-01-22T09:30'
+    const sunriseRawTime = new Date(sunriseRaw).getTime()
+    const timeUntilSunrise = Logic.calcSunrise(sunriseRawTime)  // an array: hours and minutes until sunrise
+    const sunriseTimeCalced = calcLocalSuntime(sunriseRaw, Logic.offsetInSeconds)  // local time of the sunrise, formatted like '8:16'
+    Visual.renderSuntime(timeUntilSunrise, 'sunrise', sunriseTimeCalced)  // Visual.renderSuntime: 1st arg is an array (time: hrs and min), 2nd arg is a string ('sunrise'/'sunset')
 }
-
 
 // ================================================================================================
 
+// dependency of 'renderSunrise' -- returns a string
+function calcLocalSuntime(suntimeIsoString, offsetInSeconds) {
+    const suntimeUtc = new Date(suntimeIsoString);  // parsing the string into a date object
+    const offsetInMs = offsetInSeconds * 1000; // converting to milliseconds
+    const localSuntime = new Date(suntimeUtc.getTime() + offsetInMs);  // calculating the local time by adding the offset
 
-function renderSunset(fetchedWeather, nowTimeString, sunsetTimeString) {
-    // console.log(nowTimeString, sunsetTimeString)
-    const timeArr = Logic.calcSunset(nowTimeString, sunsetTimeString)
-    // console.log(timeArr)
-    Visual.renderSuntime(timeArr, 'sunset', sunsetTimeString)
+    // extracting hours and minutes
+    const hours = localSuntime.getUTCHours();
+    const minutes = localSuntime.getUTCMinutes();
+
+    return `${hours}:${minutes.toString().padStart(2,0)}`
 }
 
+// ================================================================================================
+
+// dependency of `renderSunriseSunset`
+function renderSunset(fetchedWeather, nowTimeString, sunsetTimeString) {
+    const timeArr = Logic.calcSunset(nowTimeString, sunsetTimeString)
+    Visual.renderSuntime(timeArr, 'sunset', sunsetTimeString)
+}
 
 // ================================================================================================
 

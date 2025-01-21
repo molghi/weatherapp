@@ -55,9 +55,7 @@ function assignMap(primaryLocation, getMap, setMap, getMarker, setMarker) {    /
     }
 }
 
-
 // ================================================================================================
-
 
 // I call it in 'updateMapView' and 'assignMap'
 function addMapMarker(coords, markerGetter, mapGetter, markerSetter) {
@@ -79,9 +77,7 @@ function addMapMarker(coords, markerGetter, mapGetter, markerSetter) {
     markerSetter(L.marker(coords, { icon }).addTo(map))  // doing this instead of: marker = ...
 }
 
-
 // ================================================================================================
-
 
 function updateMapView(newCoords, newZoomLevel, mapGetter, markerGetter, markerSetter) {
     const map = mapGetter()   // getting Model.map
@@ -97,7 +93,6 @@ function updateMapView(newCoords, newZoomLevel, mapGetter, markerGetter, markerS
     // updating the marker
     addMapMarker(newCoords, markerGetterRef, mapGetterRef, markerSetterRef)
 }
-
 
 // ================================================================================================
 

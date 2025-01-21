@@ -1,3 +1,5 @@
+// needed to show short weather info in document.title
+
 function giveShortDescription(weathercode) {
         weathercode = String(weathercode)
         let shortDesc = ''

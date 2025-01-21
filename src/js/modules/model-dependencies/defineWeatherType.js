@@ -1,4 +1,6 @@
 
+// MANAGING THE BACKGROUND VIDEO HERE
+
 // a helper fn: getting a random video out of some of my selections
 const getRandomFromSelection = (arr) => {
     let randomIndex = Math.floor(Math.random() * arr.length)
@@ -37,8 +39,6 @@ const snowyNight = [`${pathBeginning}/snow-night-3.mp4`, `${pathBeginning}/snow-
 const thunderDay = [`${pathBeginning}/storm-clouds-timelapse.mp4`, `${pathBeginning}/storm-clouds-2.mp4`, `${pathBeginning}/day-dark-clouds.mp4`,  `${pathBeginning}/clouds-darkish-2.mp4`, `${pathBeginning}/clouds-darkish-3.mp4`, `${pathBeginning}/clouds-darkish.mp4`]
 const thunderEve = [`${pathBeginning}/rain-storm-lightning.mp4`]
 const thunderNight = [`${pathBeginning}/rain-and-storm-night.mp4`]
-
-// console.log(clearSkyDay.length+clearEvening.length+night.length+rainyDay.length+rainyNight.length+rainyEvening.length+morningPartlyCloudy.length+dayPartlyCloudy.length+eveningPartlyCloudy.length+nightPartlyCloudy.length+dayFoggy.length+eveningFoggy.length+nightFoggy.length+lightRainDay.length+lightRainNight.length+snowyDay.length+snowyEvening.length+snowyNight.length+thunderDay.length+thunderEve.length+thunderNight.length)
 
 
 // =========================================================================================================================================

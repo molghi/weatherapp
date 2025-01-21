@@ -1,3 +1,8 @@
+import {getLocalTime} from './getLocal.js'
+import defineBigIcon from './defineBigIcon.js'
+import {defineDayTime} from './smallFunctions.js'
+import myObject from './weathercodes.js'
+
 // formatting the obj that I am passing here in a neat, ready-to-be-rendered format
 function formatHourly(obj, getWeatherDescription) {
     const time = obj.time.map(timeStr => `${new Date(timeStr).getHours()}:${new Date(timeStr).getMinutes().toString().padStart(2,0)}`)
@@ -41,6 +46,7 @@ function formatDaily(obj, getWeatherDescription, offsetInSeconds) {
 
 // ================================================================================================
 
+// dependency of 'formatDaily' 
 function returnCorrectSuntimes(arr, offsetInSeconds) {
     const newArr = arr.map(dateTimeStr => {
         const time = new Date(dateTimeStr)
@@ -54,4 +60,37 @@ function returnCorrectSuntimes(arr, offsetInSeconds) {
 
 // ================================================================================================
 
-export { formatHourly, formatDaily }
+// upon fetching the new batch of data for Saved Locations, I need to return an obj of stuff ready to be rendered, I need to filter the API response
+function formatSavedLocations(arr) {
+    const result = []
+
+    arr.forEach(location => {
+        const obj = {}
+        // readying the prerequisites:
+        const timezoneObj = location[0]
+        const weatherObj = location[1]
+        const localTime = getLocalTime(timezoneObj.timezone.offset_sec, undefined, undefined, 'in the background')
+        const dayTime = defineDayTime(localTime[0])
+        const todayString = `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
+        const nowTime = `${(new Date().getHours()).toString().padStart(2,0)}:00`
+        const nowMoment = `${todayString}T${nowTime}`
+        const indexOfNowInHourly = weatherObj.hourly.time.findIndex(entry => entry === nowMoment)
+
+        obj.cityName = timezoneObj.city;
+        obj.country = timezoneObj.country;
+        obj.coords = [timezoneObj.coords.lat.toFixed(2), timezoneObj.coords.lng.toFixed(2)];
+        obj.localTime = localTime; 
+        obj.temp = Math.floor(weatherObj.temp)
+        obj.feelsLikeTemp = Math.floor(weatherObj.hourly.apparent_temperature[indexOfNowInHourly])
+        obj.description = myObject[String(weatherObj.weathercode)]
+        obj.icon = defineBigIcon(weatherObj.weathercode, dayTime)
+        
+        result.push(obj)
+    })
+
+    return result
+}
+
+// ================================================================================================
+
+export { formatHourly, formatDaily, formatSavedLocations }

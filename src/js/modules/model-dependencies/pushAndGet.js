@@ -1,9 +1,11 @@
+
 function pushToLocalStorage(value, key) {
     localStorage.setItem(key, value)
 }
 
 // ================================================================================================
 
+// pushing saved location
 function pushSavedLocation(obj, flag, savedLocations) {
     if(flag==='pushPrimary') {
         savedLocations.unshift(obj)
@@ -15,6 +17,7 @@ function pushSavedLocation(obj, flag, savedLocations) {
 
 // ================================================================================================
 
+// fetching saved locations
 function getSavedLocations(savedLocations) {
     const fetched = localStorage.getItem('savedLocations')
     if(!fetched) return
@@ -26,6 +29,7 @@ function getSavedLocations(savedLocations) {
 
 // ================================================================================================
 
+// fetching primary location
 function getPrimaryLocation() {
     const fetched = localStorage.getItem('primaryLocation')
     if(!fetched) return null
@@ -34,6 +38,7 @@ function getPrimaryLocation() {
 
 // ================================================================================================
 
+// pushing primary location
 function pushPrimaryLocation([lat,lng], primaryLocation) {
     primaryLocation = []
     primaryLocation.push(lat, lng)
@@ -42,31 +47,38 @@ function pushPrimaryLocation([lat,lng], primaryLocation) {
 
 // ================================================================================================
 
+// pushing fetched coords
 function pushFetchedCoords(value, fetchedCoords) {
     fetchedCoords.push(value)
 }
 
 // ================================================================================================
 
+// pushing weather fetch
 function pushWeatherFetch(value, previousWeatherFetches) {
     previousWeatherFetches.push(value)
 }
 
 // ================================================================================================
 
+// pushing timezone fetch
 function pushTimezoneFetch(value, previousTimezoneFetches) {
     previousTimezoneFetches.push(value)
 }
 
 // ================================================================================================
 
+// pushing weather fetches to LS
 function pushWeatherFetchesToLS(previousWeatherFetches) {
+    // console.log(previousWeatherFetches)
         const weather = JSON.stringify(previousWeatherFetches)
         pushToLocalStorage(weather, 'weatherFetches')
+        // console.log(JSON.parse(localStorage.getItem('weatherFetches')))
     }
 
 // ================================================================================================
 
+// pushing timezone fetches to LS
 function pushTimezoneFetchesToLS(previousTimezoneFetches) {
     const timezone = JSON.stringify(previousTimezoneFetches)
     pushToLocalStorage(timezone, 'timezoneFetches')
@@ -74,6 +86,7 @@ function pushTimezoneFetchesToLS(previousTimezoneFetches) {
 
 // ================================================================================================
 
+// fetching weather fetches from LS
 function getWeatherFetchesFromLS(previousWeatherFetches) {
     const fetch = localStorage.getItem('weatherFetches')
     if (fetch) previousWeatherFetches = JSON.parse(fetch);
@@ -81,6 +94,7 @@ function getWeatherFetchesFromLS(previousWeatherFetches) {
 
 // ================================================================================================
 
+// fetching timezone fetches from LS
 function getTimezoneFetchesFromLS(previousTimezoneFetches) {
     const fetch = localStorage.getItem('timezoneFetches')
     if (fetch) previousTimezoneFetches = JSON.parse(fetch);
@@ -88,6 +102,7 @@ function getTimezoneFetchesFromLS(previousTimezoneFetches) {
     
 // ================================================================================================
     
+// fetching coords fetches from LS
 function getCoordsFetchesFromLS(fetchedCoords) {
     const fetch = localStorage.getItem('userCoords')
     if (fetch) fetchedCoords = JSON.parse(fetch);
@@ -95,6 +110,7 @@ function getCoordsFetchesFromLS(fetchedCoords) {
 
 // ================================================================================================
 
+// getting and returning the string of explained wind direction
 function getWindDirection(degrees) {
     const directions = [
         "North", "North-Northeast", "Northeast", "East-Northeast",

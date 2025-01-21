@@ -3,8 +3,10 @@ import { fetchTimezoneAndWeather } from './fetchers.js'
 import  afterFetching  from './renderAfterFetch.js'
 import { runEventListeners } from '../../Controller.js'
 
+// FUNCTIONS RELATED TO THE SAVED LOCATIONS BLOCK
 // ================================================================================================
 
+// updating saved location
 function updateThisSavedLocation() {
     const objOfData = Visual.getThisLocationData()  // getting this location data from the newly rendered
     Logic.updateSavedLocation(objOfData)  // pushing it to Logic.savedLocations and LS
@@ -14,31 +16,26 @@ function updateThisSavedLocation() {
 
 // ================================================================================================
 
+// happens after the click on elements in saved locations: either remove the saved location or fetch and show the weather there
 async function savedLocationsClick(typeOfAction, coords) {
     try {
         const [lat, lng] = coords.split(',')
 
         if(typeOfAction === 'remove') {  // removing saved location
-            Logic.removeFromSavedLocations(lat, lng)  // delete from Model and push this change to LS
+            Logic.removeFromSavedLocations(lat, lng)  // delete from Model/Logic and push this change to LS
             document.querySelector('.added-locations').innerHTML = ``   // to re-render
             Logic.savedLocations.forEach(entryObj => Visual.addLocation('render', entryObj))  // getting new data and re-rendering this entire section
         }
 
         if(typeOfAction === 'fetch') {  // fetching the weather by 'coords' and displaying it
-            const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])
-
-            // a sequence of actions that happen after fetching, such as rendering and updating things:
-            afterFetching(fetchedWeather, fetchedTimezone)
-
-            // running all event listeners
-            runEventListeners()
-
-            // because I just clicked on the saved location item and fetched the weather from there, I need to update that element in Saved Locations
-            updateThisSavedLocation()
+            const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather([lat, lng], [lat, lng])   // fetching new
+            afterFetching(fetchedWeather, fetchedTimezone) // a sequence of actions that happen after fetching, such as rendering and updating things
+            runEventListeners() // running all event listeners
+            updateThisSavedLocation() // because I just clicked on the saved location item and fetched the weather from there, I am updating that element in Saved Locations
         }
+
     } catch (error) {
         console.error(error, error.message);
-        // if(error.message === `Failed to fetch the weather`) {
         if(error.message.startsWith('Failed to fetch')) {
             Visual.toggleSpinner('hide')
             alert("Sorry, fetching data failed. Try again later.")
@@ -49,9 +46,10 @@ async function savedLocationsClick(typeOfAction, coords) {
 
 // ================================================================================================
 
+// making one saved location primary
 function makeLocationPrimary(obj) {
-    const { coords } = obj
-    const indexInSavedLocations = Logic.savedLocations.findIndex(entry => entry.coords.toString() === coords.toString())
+    const { coords } = obj  // getting its coords
+    const indexInSavedLocations = Logic.savedLocations.findIndex(entry => entry.coords.toString() === coords.toString())  // getting its index in Model/Logic
 
     if(indexInSavedLocations === 0) {  // means the index of it there is zero, it is first, do nothing with Logic.savedLocations, only change Logic.primaryLocation
         return Logic.pushPrimaryLocation([coords[0], coords[1]]);
@@ -72,8 +70,8 @@ function makeLocationPrimary(obj) {
 
 // ================================================================================================
 
+// handles the btns in saved locations: either make a location primary or add a new location
 function locationBtnsHandler(typeOfAction, obj) { 
-    console.log(typeOfAction, obj)
     const savedLocationsCoords = Logic.savedLocations.map(locationObj => locationObj.coords.toString())  // stringifying coords, which is an array, to compare it
 
     if(savedLocationsCoords.includes(obj.coords.toString())) {   // if Saved Locations already contains this location I'm adding
@@ -94,12 +92,9 @@ function locationBtnsHandler(typeOfAction, obj) {
         if(typeOfAction === 'makePrimary') {  // ...then I need to add this location and make it primary
             Logic.pushSavedLocation(obj)    // adding it to Model and LS
             Visual.addLocation('render', obj)   // adding it in the UI
-            makeLocationPrimary(obj)
+            makeLocationPrimary(obj)   // making it primary
         }
     }
-
-    // e.target.closest('.btn-add-location').setAttribute('disabled', true)
-    // const thisLocationDataObj = this.addLocation()
 }
 
 // ================================================================================================

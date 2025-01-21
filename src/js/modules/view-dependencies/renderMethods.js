@@ -3,24 +3,26 @@ import { sunriseIcon, sunsetIcon, precipitationIcon, lightbulbIcon, sunIcon, tim
 // rendering .weather__place & .weather__coords
 function renderLocationAndCoords(obj, locationEl, coordsEl, locationTitleEl) {
     let {city, continent, country, flag, coords, timezone} = obj
+
+    // some failsafe options
     city = city ? city : ''
     continent = continent ? continent : ''
     country = country ? country : ''
     flag = flag ? flag : ''
-    coords = coords ? coords : ''
-
+    coords = coords ? coords : '' 
     if(!city && timezone.name) city = timezone.name.split('/')[1].replaceAll('_','')
 
     locationEl.innerHTML = `${city}, <span class="weather__country">${country}<span class="weather__flag">${flag}</span></span>, ${continent}, Terra`
     coordsEl.innerHTML = `(${coords?.lat.toFixed(2)}° N, ${coords?.lng.toFixed(2)}° E)`
     locationTitleEl.innerHTML = `Location:`
 
+    // adding top icons: Make Primary and Add to Saved Locations
     addTopIcons()
 }
 
 // ================================================================================================
 
-// adding the Make Primary and Add to Cities List btn-icons ---> called only in 'renderLocationAndCoords'
+// dependency of 'renderLocationAndCoords' -- adding the Make Primary and Add to Cities List btn-icons 
 function addTopIcons() {
     if(document.querySelector('.weather__icons')) document.querySelector('.weather__icons').remove()
     const parentEl = document.querySelector('.weather__top')
@@ -37,7 +39,7 @@ function addTopIcons() {
 function renderTimeElement(dateTodayFormatted, timeArr, timeEl) {
     let [hours, minutes] = timeArr
     const minutesFormatted = minutes.toString().padStart(2,0)
-    if(hours>=24) hours -= 0
+    if(hours >= 24) hours -= 0
     timeEl.innerHTML = `${hours}<span>:</span>${minutesFormatted}`
     timeEl.setAttribute('title', `Location date-time: ${dateTodayFormatted}  ̶ ${hours}:${minutesFormatted}`)
 }
@@ -45,23 +47,23 @@ function renderTimeElement(dateTodayFormatted, timeArr, timeEl) {
 // ================================================================================================
 
 // rendering .sun-time
-function renderSuntime(time, type='sunrise', actualTime='', suntimeEl, sunwordEl) {   // 'time' is an array, 'type' is a string
-    const [hours, minutes] = time
+function renderSuntime(time, type, actualTime, suntimeEl, sunwordEl) { 
+    const [hours, minutes] = time  // 'time' is an array
+
+    // options
     if(hours > 1) suntimeEl.innerHTML = `in ${hours} hours`;
     else if(hours === 1) suntimeEl.innerHTML = `in ${hours} hour`;
     else if(hours === 0 && minutes === 1) suntimeEl.innerHTML = `in ${minutes} minute`;
     else suntimeEl.innerHTML = `in ${minutes} minutes`;
 
-    if(actualTime.startsWith('0')) actualTime = actualTime.replace('0', '');
+    // failsafe
+    if(Number.isNaN(time[0])) suntimeEl.innerHTML = `At ${actualTime}`
+
+    if(actualTime.startsWith('0')) actualTime = actualTime.replace('0', ''); // to have 1:30 instead of 01:30
     suntimeEl.setAttribute('title', `At ${actualTime}`);
 
-    if(type==='sunset') {
-        sunwordEl.innerHTML = `Sunset:`
-    } else sunwordEl.innerHTML = `Sunrise:`
-
-    // const word = time > 15 ? 'minutes' : 'hours'
-    // suntimeEl.innerHTML = `in ${time} ${word}`
-    // suntimeEl.setAttribute('title', 'Nautical sunrise')
+    if(type==='sunset') sunwordEl.innerHTML = `Sunset:`;
+    else sunwordEl.innerHTML = `Sunrise:`;
 }
 
 // ================================================================================================
@@ -70,6 +72,8 @@ function renderSuntime(time, type='sunrise', actualTime='', suntimeEl, sunwordEl
 function renderTimeIcon(time, timeboxIconEl) {
     const [hrs, min] = time
     let icon = ''
+
+    // options
     if((hrs >= 0 && hrs < 7) || hrs === 24) icon = nightIcon;
     if(hrs >= 7 && hrs < 12) icon = morningIcon;
     if(hrs >= 12 && hrs < 18) icon = dayIcon;
@@ -119,20 +123,20 @@ async function showBackgroundVideo(path, videoBoxEl, videoEl) {
 
 // ================================================================================================
 
-// I call it in 'showBackgroundVideo'
+// dependency of 'showBackgroundVideo'
 function filterVideo(flag, videoEl) {
     if(flag==='reset' || flag==='default') {
         return videoEl.style.filter = 'brightness(0.3) blur(1px)'
-    }
+    } 
 }
 
 // ================================================================================================
 
 // rendering .weather__icon
 function renderBigIcon(icon, bigIconEl) {
-    bigIconEl.innerHTML = ``
+    bigIconEl.innerHTML = ``  // emptying first
     const img = document.createElement('img')
-    img.src = `${icon}`
+    img.src = `${icon}` // setting the path
     bigIconEl.appendChild(img)
 }
 
@@ -140,7 +144,7 @@ function renderBigIcon(icon, bigIconEl) {
 
 // rendering .weather__precipitation-details
 function renderPrecipitation([precipitationProbability, precipitation, rain, showers, snowDepth, snowfall], precipitationEl, precipitationTitleEl) {
-    console.log(`renderPrecipitation:`, precipitationProbability, precipitation, rain, showers, snowDepth, snowfall)
+    // console.log(`renderPrecipitation:`, precipitationProbability, precipitation, rain, showers, snowDepth, snowfall)
 
     const valuesMapRain = {
         mm0: `No precipitation`,  // mm0 means 0 mm
@@ -157,8 +161,10 @@ function renderPrecipitation([precipitationProbability, precipitation, rain, sho
         cm10: `Heavy snow`         // 10+ cm
     }
 
+    // default option
     let toRender = `<span title="Precipitation probability">${precipitationProbability}%</span>`
 
+    // options
     if(rain!==0 && precipitation === 0 && precipitationProbability === 0) toRender += `, ${valuesMapRain.mm0}`;
     if(rain!==0 && precipitation > 0 && precipitation < 1) toRender += `, ${valuesMapRain.mm05}`;
     if(rain!==0 && precipitation >= 1 && precipitation < 5) toRender += `, ${valuesMapRain.mm1}`;
@@ -179,13 +185,15 @@ function renderPrecipitation([precipitationProbability, precipitation, rain, sho
 // ================================================================================================
 
 // rendering .weather__hours
-function renderHourly(obj, hourlyBoxEl, hourlyTitleEl) {    // 'obj' is an obj of props selected by me for the upcoming 48h
-    const amountOfHourItems = 6 // how many of such items in the UI to render
+function renderHourly(obj, hourlyBoxEl, hourlyTitleEl) {    
+    // 'obj' is an obj of props selected by me for the upcoming 48h
+    const amountOfHourItems = 6 // how many of such items in the UI to render; if 6, then effectively for 6 hours
     const hoursNow = new Date().getHours()
     // NOTE: in `obj.time` (is an array), there are 48 strings representing 48 hours, it starts at now-hours (index 0)
 
     // iterating and creating a long string of new elements to render
-    const elementsToRender = obj.time.slice(1).map((timeItem, i) => {   // NOTE: all of those arrays (like 'time' in 'obj') have the same length; slicing one to get the next hour
+    const elementsToRender = obj.time.slice(1).map((timeItem, i) => {   
+    // NOTE: all of those arrays (like 'time' in 'obj') have the same length; slicing one to get the next hour
         if(i > amountOfHourItems-1) return  // return only <amountOfHourItems> elements to render
         return renderHour(timeItem, obj.tempGeneral[i+1], obj.tempFeelsLike[i+1], obj.weathercodes[i+1], obj.precipitationProbability[i+1], obj.humidity[i+1], obj.cloudCover[i+1])
     }).join('')
@@ -196,7 +204,7 @@ function renderHourly(obj, hourlyBoxEl, hourlyTitleEl) {    // 'obj' is an obj o
 
 // ================================================================================================
 
-// a dependency of `renderHourly`
+// dependency of `renderHourly`
 function renderHour(time, tempGeneral, tempFeelsLike, description, precipitation, humidity, cloudCover) {   
     return `<div class="weather__hour">
                 <div class="weather__hour-time"><span>${timeIcon}</span>${time}</div>
@@ -243,7 +251,7 @@ function renderDaily(dateNowAtLocation, obj, dailyBoxEl, dailyTitleEl) {
 
 // ================================================================================================
 
-// a dependency of `renderDaily`
+// dependency of `renderDaily`
 function renderDay(index, tempMin, tempMax, tempFeelLikeMax, tempFeelLikeMin, desc, uv, sunrise, sunset, precipitationProbability, daylightDuration, precipitationHours, sunshineDuration, date) {    
     const dayNames = [`Tomorrow`, `The Day After Tomorrow`, `In 3 Days`, `In 4 Days`, `In 5 Days`, `In 6 Days`]
     const dateFormatted = date.split('-').reverse().join('/').replace('/20','/')
@@ -284,17 +292,22 @@ function renderDaylightSunshine(daylightDuration, sunshineDuration, lightEl, sun
 function showError(text) {
     const div = document.createElement('div')
     div.classList.add('error', 'message-error')
+
+    // default
     div.innerHTML = `<div><span>Sorry, some error happened... Cannot show the weather now.</span><span>Try again later.</span></div>`;
+    
     if(text) div.innerHTML = `<div>${text}</div>`;
     document.body.appendChild(div)
 }
 
 // ================================================================================================
 
-// changing Fahr to Cels and back
+// changing Fahr to Cels and back in the UI
 function rerenderDegrees(flag, obj, airTempEl, fahrenheitSign, feelsLikeEl, celsiusSign, savedLocTempCelsius) {
     const allHourlyTemps = [...document.querySelectorAll('.weather__hour-temp')]
     const allDailyTemps = [...document.querySelectorAll('.weather__day-temp')]
+
+    // small helper functions
     const getHourlyTempHtml = (sign, usual, feels) => `${usual}${sign} <span title="Feels like">(${feels}${sign})</span>`
     const getDailyTempHtml = (sign, usualMin, usualMax, feelsMin, feelsMax) => `${usualMin} - ${usualMax}${sign} &nbsp;<span>(${feelsMin} - ${feelsMax}${sign})</span>`
 
@@ -335,28 +348,27 @@ function rerenderDegrees(flag, obj, airTempEl, fahrenheitSign, feelsLikeEl, cels
 
 // ================================================================================================
 
-// changing temp units in Saved Locations: from Celsius to F and back --- I call it in 'rerenderDegrees'
+// dependency of 'rerenderDegrees' -- changing temp units in Saved Locations: from Celsius to F and back
 function changeTempSavedLocations(flag, fahrenheitSign, celsiusSign, savedLocTempCelsius) {
+    const inFahrenheit = savedLocTempCelsius.map((oneElData,i) => {
+        const val1 = Math.floor((oneElData[0] * 9/5) + 32)
+        const val2 = Math.floor((oneElData[1] * 9/5) + 32)
+        return [val1, val2]
+    })
 
-        const inFahrenheit = savedLocTempCelsius.map((oneElData,i) => {
-            const val1 = Math.floor((oneElData[0] * 9/5) + 32)
-            const val2 = Math.floor((oneElData[1] * 9/5) + 32)
-            return [val1, val2]
+    if(flag === 'Fahrenheit') {
+        [...document.querySelectorAll('.added-location')].forEach((locEl, i) => {
+            locEl.querySelector('.added-location-temp').innerHTML = `${inFahrenheit[i][0]}${fahrenheitSign}`
+            locEl.querySelector('.added-location-temp').setAttribute('title', `Feels like ${inFahrenheit[i][1]}${fahrenheitSign}`)
         })
-
-        if(flag === 'Fahrenheit') {
-            [...document.querySelectorAll('.added-location')].forEach((locEl, i) => {
-                locEl.querySelector('.added-location-temp').innerHTML = `${inFahrenheit[i][0]}${fahrenheitSign}`
-                locEl.querySelector('.added-location-temp').setAttribute('title', `Feels like ${inFahrenheit[i][1]}${fahrenheitSign}`)
-            })
-        } else {
-            [...document.querySelectorAll('.added-location')].forEach((locEl, i) => {
-                locEl.querySelector('.added-location-temp').innerHTML = `${savedLocTempCelsius[i][0]}${celsiusSign}`
-                locEl.querySelector('.added-location-temp').setAttribute('title', `Feels like ${savedLocTempCelsius[i][1]}${celsiusSign}`)
-            })
-        }
-
+    } else {
+        [...document.querySelectorAll('.added-location')].forEach((locEl, i) => {
+            locEl.querySelector('.added-location-temp').innerHTML = `${savedLocTempCelsius[i][0]}${celsiusSign}`
+            locEl.querySelector('.added-location-temp').setAttribute('title', `Feels like ${savedLocTempCelsius[i][1]}${celsiusSign}`)
+        })
     }
+
+}
 
 // ================================================================================================
 
@@ -380,39 +392,40 @@ function renderModalWindow() {
 
 // rendering the results in search city form upon submitting it
 function renderResults(resultsObj) {
-        if(!resultsObj.hasOwnProperty('results')) {   // if nothing was found:
-            const html = `<div class="modal__nothing">Nothing was found</div>`
-            document.querySelector('.modal__form').insertAdjacentHTML(`beforeend`, html)
-            return
-        }
-
-        const div = document.createElement('div')
-        div.classList.add('modal__results')
-
-        const results = resultsObj.results.map(result => giveOneResultHtml(result)).join('')
-        div.innerHTML = ''
-        div.innerHTML = results
-        document.querySelector('.modal__form').appendChild(div)
+    if(!resultsObj.hasOwnProperty('results')) {   // if nothing was found:
+        const html = `<div class="modal__nothing">Nothing was found</div>`
+        document.querySelector('.modal__form').insertAdjacentHTML(`beforeend`, html)
+        return
     }
+
+    const div = document.createElement('div')
+    div.classList.add('modal__results')
+
+    const results = resultsObj.results.map(result => giveOneResultHtml(result)).join('')
+    div.innerHTML = ''
+    div.innerHTML = results
+    document.querySelector('.modal__form').appendChild(div)
+}
 
 // ================================================================================================
 
-// I call it in 'renderResults'
+// dependency of 'renderResults'
 function giveOneResultHtml(resultObj) {
-        let {country, name, latitude, longitude, timezone, admin1} = resultObj
+    let {country, name, latitude, longitude, timezone, admin1} = resultObj
 
-        name = name ? name : ''   // name is a city name
-        admin1 = admin1 ? ', ' + admin1 : ''   // admin1 is a region/state
-        country = country ? ', ' + country : ''
-        timezone = timezone ? timezone : ''
-        latitude = latitude ? latitude : ''
-        longitude = longitude ? longitude : ''
-        const fullname = `${name}${admin1}${country}`
+    // some failsafe options
+    name = name ? name : ''   // name is a city name
+    admin1 = admin1 ? ', ' + admin1 : ''   // admin1 is a region/state
+    country = country ? ', ' + country : ''
+    timezone = timezone ? timezone : ''
+    latitude = latitude ? latitude : ''
+    longitude = longitude ? longitude : ''
+    const fullname = `${name}${admin1}${country}`
         
-        return `<div class="modal__result" data-lat="${latitude}" data-lng="${longitude}" data-timezone="${timezone}" title="${fullname}">
+    return `<div class="modal__result" data-lat="${latitude}" data-lng="${longitude}" data-timezone="${timezone}" title="${fullname}">
 ${fullname}
 </div>`
-    }
+}
 
 // ================================================================================================
 
@@ -434,7 +447,7 @@ function addLocation(type='addingNew', obj, thisLocData) {
 
 // ================================================================================================
 
-// I call it in 'addLocation'
+// dependency of 'addLocation'
 function giveSmallLocationHtml(localTime, cityName, country, temp, icon, coords, feelsLikeTemp, description) {
     return `<div class="added-location" data-coords="${coords}">
                <button class="added-location-remove-btn">Remove</button>
@@ -536,4 +549,22 @@ function renderChangeLocBtn() {
 
 // ================================================================================================
 
-export { renderLocationAndCoords, renderTimeElement, renderSuntime, renderTimeIcon, showBackgroundVideo, renderBigIcon, renderPrecipitation, renderHourly, renderDaily,renderDaylightSunshine, showError, rerenderDegrees, renderModalWindow, renderResults, addLocation, renderMapModal, renderTempAndDesc, renderWind, renderUvIndex, renderDayTime, renderUpdatedAt, renderFeelsLike, renderHumidity, renderCloudCover, renderChangeLocBtn }
+// updating Saved Location elements (although, I don't think I use it...)
+function updateSavedLocElements(arrOfData) {
+    if(arrOfData.length === 0 || !arrOfData) return;
+    const allSavedLocEls = [...document.querySelectorAll('.added-location')]
+    arrOfData.forEach((entry, i) => {
+        allSavedLocEls[i].querySelector('.added-location-city').textContent = entry.cityName
+        allSavedLocEls[i].querySelector('.added-location-city').setAttribute('title', `${entry.cityName}, ${entry.country}`)
+        // I don't think I need to update coords...
+        allSavedLocEls[i].querySelector('.added-location-time').textContent = `${entry.localTime[0]}:${entry.localTime[1].toString().padStart(2,0)}`
+        allSavedLocEls[i].querySelector('.added-location-temp').textContent = `${entry.temp}°C`
+        allSavedLocEls[i].querySelector('.added-location-temp').setAttribute('title', `Feels like ${entry.feelsLikeTemp}°C`)
+        allSavedLocEls[i].querySelector('.added-location-icon').setAttribute('title', entry.description)
+        allSavedLocEls[i].querySelector('.added-location-icon img').setAttribute('src', entry.icon)
+    })
+}
+
+// ================================================================================================
+
+export { renderLocationAndCoords, renderTimeElement, renderSuntime, renderTimeIcon, showBackgroundVideo, renderBigIcon, renderPrecipitation, renderHourly, renderDaily,renderDaylightSunshine, showError, rerenderDegrees, renderModalWindow, renderResults, addLocation, renderMapModal, renderTempAndDesc, renderWind, renderUvIndex, renderDayTime, renderUpdatedAt, renderFeelsLike, renderHumidity, renderCloudCover, renderChangeLocBtn, updateSavedLocElements }

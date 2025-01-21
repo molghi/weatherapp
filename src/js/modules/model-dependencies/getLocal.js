@@ -1,4 +1,6 @@
-function getLocalTime(offsetInSec, timeOfTheDay, defineDayTime) {   // returns an array: current hour and minutes (as numbers)
+
+// getting local time: returns an array: current hour and minutes (as numbers)
+function getLocalTime(offsetInSec, timeOfTheDay, defineDayTime, type) {  
     const offsetInHours = offsetInSec / 3600
     const utcHours = new Date().getUTCHours()
     const utcMinutes = new Date().getUTCMinutes()
@@ -15,22 +17,25 @@ function getLocalTime(offsetInSec, timeOfTheDay, defineDayTime) {   // returns a
         adjustedHours += 24
     }
 
-    timeOfTheDay = defineDayTime(adjustedHours)
+    if(type !== 'in the background') {  // I call it with 'in the background' when I need to update my Saved Location elements
+        timeOfTheDay = defineDayTime(adjustedHours)
+    }  
 
     return [adjustedHours, adjustedMinutes]
 }
 
 // ================================================================================================
 
+// getting local date: returns a string
 function getLocalDay(offsetInSec) {
     const nowUTC = new Date();
-    const utcTimestamp = nowUTC.getTime();  // Get the current UTC time in milliseconds
+    const utcTimestamp = nowUTC.getTime();  // getting the current UTC time in milliseconds
         
-    const localTimestamp = utcTimestamp + offsetInSec * 1000;  // Calculate the local timestamp
+    const localTimestamp = utcTimestamp + offsetInSec * 1000;  // calculating the local timestamp
         
-    const localDate = new Date(localTimestamp);  // Create a Date object for the local time
+    const localDate = new Date(localTimestamp);  // creating a Date object for the local time
 
-    // Extract the day, month, and year based on local time
+    // extractting the day, month, and year based on local time
     const day = localDate.getUTCDate();
     const month = localDate.getUTCMonth() + 1;  
     const year = localDate.getUTCFullYear();

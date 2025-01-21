@@ -40,7 +40,6 @@ import overcast from '../../../img/weather-icons/overcast.svg';
 
 // I call it in 'rendering.js' file
 function defineBigIcon(weathercode, dayTime) {
-        // console.log('defineBigIcon:', weathercode, dayTime)
         const string = `${weathercode}_${dayTime}`
 
         switch (string) {

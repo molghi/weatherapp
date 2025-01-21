@@ -1,26 +1,29 @@
-// import { API_KEY } from '../config.js'
+
 import { Logic, Visual } from '../../Controller.js'   // needed to show and then hide the spinner: Visual.toggleSpinner
 const API_KEY = process.env.API_KEY;
 const OPEN_WEATHER_MAP_API_KEY = process.env.OPEN_WEATHER_MAP_API_KEY;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
-async function fetchWeather(coordsArr) {
+// ================================================================================================
+
+async function fetchWeather(coordsArr, type) {
     try {
         const hourlyParams = `temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,weather_code,cloud_cover,visibility,wind_gusts_10m`
         const dailyParams = `weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,daylight_duration,sunshine_duration,uv_index_max,precipitation_sum,rain_sum,showers_sum,snowfall_sum,precipitation_hours,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant`
         const timezoneParams = `Europe%2FIstanbul`
 
-        Visual.toggleSpinner()
+        if(type !== 'in the background') { Visual.toggleSpinner() }     // 'in the background' means for Saved Locations (not the main fetch)
+        
 
         const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${coordsArr[0]}&longitude=${coordsArr[1]}&hourly=${hourlyParams}&daily=${dailyParams}&current_weather=true&past_days=7&timezone=${timezoneParams}` 
         const response = await fetch(API_URL)
 
         if(!response.ok) {
-            console.error('Weather fetch response not OK:', response.status, response.statusText);
-            throw new Error('Failed to fetch the weather')
+            console.error('💥💥💥 Weather fetch response not OK:', response.status, response.statusText);
+            throw new Error('💥💥💥 Failed to fetch the weather')
         }
 
-        Visual.toggleSpinner('hide')
+        if(type !== 'in the background') { Visual.toggleSpinner('hide') }
 
         const data = await response.json()
         const myObj = {
@@ -42,13 +45,11 @@ async function fetchWeather(coordsArr) {
         return myObj
     } catch (error) {
         console.error(error, error.message)
-        throw error;
+        throw error;   // rethrowing the error to catch further up the chain
     }
 }
 
-
 // ================================================================================================
-
 
 async function fetchTimezone(coordsArr) {
     try {
@@ -56,8 +57,8 @@ async function fetchTimezone(coordsArr) {
         const API__URL = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${API_KEY}`
         const response = await fetch(API__URL)
         if(!response.ok) {
-            console.error('Timezone fetch response not OK:', response.status, response.statusText);
-            throw new Error('Failed to fetch the timezone');
+            console.error('💥💥💥 Timezone fetch response not OK:', response.status, response.statusText);
+            throw new Error('💥💥💥 Failed to fetch the timezone');
         }
         const data = await response.json()
         const myObj = {
@@ -85,10 +86,13 @@ async function fetchTimezone(coordsArr) {
 
 async function fetchWeatherByCityName(cityName) {
     try {
-        // const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=faifaifai&count=10&language=en&format=json`
-        const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=10&language=en&format=json`
+        const resultsToReturn = 10
+        const API_URL = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=${resultsToReturn}&language=en&format=json`
         const response = await fetch(API_URL)
-        if(!response.ok) throw new Error('Fetching by city name was unsuccessful')
+        if(!response.ok) {
+            console.error('💥💥💥 City name fetch response not OK:', response.status, response.statusText);
+            throw new Error('💥💥💥 Fetching by city name was unsuccessful')
+        }
         const data = await response.json()
         return data
     } catch (error) {

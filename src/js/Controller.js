@@ -8,7 +8,7 @@ import View from './modules/View.js'
 import afterFetching from './modules/controller-dependencies/renderAfterFetch.js'
 import showCorrectError from './modules/controller-dependencies/errorHandler.js'
 import { savedLocationsClick, locationBtnsHandler } from './modules/controller-dependencies/savedLocFuncs.js'
-import { fetchTimezoneAndWeather } from './modules/controller-dependencies/fetchers.js'
+import { fetchTimezoneAndWeather, updateSavedLocations } from './modules/controller-dependencies/fetchers.js'
 import { changeTempUnits, openModal, showMap, getFromLS, setCoords } from './modules/controller-dependencies/smallFuncs.js'
 
 const Logic = new Model()
@@ -25,16 +25,17 @@ async function init(flag) {
         // NOTE: 'init' is called with the arg 'refresh' if it refreshes every hour -- but leaflet ignores it, else it produces error (multiple initialises of it)
         if(flag !== 'refresh') { 
             if(Logic.primaryLocation.length > 0) Logic.assignMap();   // initialising Leaflet
+            else console.log("Leaflet was not initialised")
         }
 
         const [fetchedTimezone, fetchedWeather] = await fetchTimezoneAndWeather(coords, coords)  // fetching timezone and weather
 
         afterFetching(fetchedWeather, fetchedTimezone)  // a sequence of actions that happen after fetching, such as rendering and updating things
 
-        if(Logic.savedLocations.length > 0) {
+        if(Logic.savedLocations.length > 0) {  // rendering saved locations
+            await updateSavedLocations()
             document.querySelector('.added-locations').innerHTML = ''   // making sure it's empty first
-            // console.log(54)
-            Logic.savedLocations.forEach(locationObj => Visual.addLocation('render', locationObj))  // rendering saved locations
+            Logic.savedLocations.forEach(locationObj => Visual.addLocation('render', locationObj))  // rendering 
         }
 
         runEventListeners()  // running all event listeners
@@ -49,6 +50,7 @@ init()
 
 // re-fetching and re-rendering the weather every hour
 let isRunning = false;   // to prevent overlapping scenarios
+
 setInterval(async () => {
     if (isRunning) return; // skip if already running
     isRunning = true;

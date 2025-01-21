@@ -75,6 +75,7 @@ class View {
 
     // rendering .weather__place & .weather__coords
     renderLocationAndCoords(obj) {
+        // Note: I name the method and the fn I call in it the same to avoid renaming everywhere where I use this method.
         renderLocationAndCoords(obj, this.locationEl, this.coordsEl, this.locationTitleEl)
     }
 
@@ -89,7 +90,7 @@ class View {
 
     // rendering .sun-time
     renderSuntime(time, type='sunrise', actualTime='') {   // 'time' is an array, 'type' is a string
-        renderSuntime(time, type='sunrise', actualTime='', this.suntimeEl, this.sunwordEl)
+        renderSuntime(time, type, actualTime, this.suntimeEl, this.sunwordEl)
     }
 
     // ================================================================================================
@@ -136,6 +137,7 @@ class View {
 
     // ================================================================================================
 
+    // showing the bg video
     async showBackgroundVideo(path) {
         await showBackgroundVideo(path, this.videoBoxEl, this.videoEl)
     }
@@ -198,18 +200,21 @@ class View {
 
     // ================================================================================================
 
+    // showing error msg
     showError(text) {
         showError(text)
     }
 
     // ================================================================================================
 
+    // rendering the change location btn
     renderChangeLocBtn() {
         renderChangeLocBtn()
     }
 
     // ================================================================================================
 
+    // rendering the map btn
     renderMapBtn() {
         document.querySelector('.show-map-btn').innerHTML = globeIcon
     }
@@ -224,7 +229,7 @@ class View {
 
     // ================================================================================================
 
-    // getting the Cels temp values from the rendered Saved Locations block ---  I call it in 'rerenderDegrees'
+    // dependency of 'rerenderDegrees' -- getting the Cels temp values from the rendered Saved Locations block
     getCelsiusSavedLocations() {
         if(!this.savedLocTempCelsius) {
             this.savedLocTempCelsius = [...document.querySelectorAll('.added-location')].map(locationEl => {   // it's an array of arrays: each arr there represents one Saved Loc el
@@ -251,7 +256,7 @@ class View {
 
     // ================================================================================================
 
-    // adding new Saved Location
+    // adding/rendering new Saved Location
     addLocation(type='addingNew', obj) {
         const thisLocationData = this.getThisLocationData()
         addLocation(type, obj, thisLocationData)
@@ -259,7 +264,7 @@ class View {
 
     // ================================================================================================
 
-    // get some data about the cur loc
+    // dependency of 'addLocation' -- get some data about the cur loc from the UI
     getThisLocationData() {
         const localTime = this.timeEl.textContent
         const cityName = this.locationEl.textContent.split(',')[0]
@@ -274,6 +279,7 @@ class View {
 
     // ================================================================================================
 
+    // rendering the map modal
     renderMapModal() {
         renderMapModal()
         this.moveMapDiv()
@@ -285,6 +291,7 @@ class View {
     // ================================================================================================
 
 
+    // instead of deleting and creating it, I just move the map el in and out
     moveMapDiv(flag='move in') {
         if(flag === 'move in') document.querySelector('.modal__window').appendChild(this.mapDiv);
         if(flag === 'move out') document.body.appendChild(this.mapDiv);
@@ -292,6 +299,7 @@ class View {
 
     // ================================================================================================
 
+    // updating the document title
     updateDocumentTitle(tempNow, shortDesc) { 
         const value = `${tempNow}${this.celsiusSign}, ${shortDesc}`
         document.title = `Weather Control: ${value}`
@@ -299,6 +307,7 @@ class View {
 
     // ================================================================================================
 
+    // clearing the results in the Search By City form
     clearModalResultsBox() {
         if(document.querySelector('.modal__results')) document.querySelector('.modal__results').remove()
         if(document.querySelector('.modal__nothing')) document.querySelector('.modal__nothing').remove()    
@@ -306,24 +315,28 @@ class View {
 
     // ================================================================================================
 
+    // toggling big spinner
     toggleSpinner(flag='show') {
         toggleSpinner(flag)
     }
 
     // ================================================================================================
 
+    // toggling the spinner in the Search By City form
     toggleLittleSpinner(flag='show', parentElement) {
         toggleLittleSpinner(flag, parentElement)
     }
 
     // ================================================================================================
 
+    // toggling modal window
     toggleModalWindow(flag='show'){
         toggleModalWindow(flag, this.renderModalWindow)
     }
 
     // ================================================================================================
 
+    // prompting geolocation
     promptGeolocation() {
         return promptGeolocation()
     }
@@ -338,7 +351,7 @@ class View {
     
 
     
-    // ONLY EVENT LISTENERS BELOW:
+    // ONLY EVENT LISTENERS BELOW: ADDING AND REMOVING because I re-render all frequently
     // ================================================================================================
     
     // handling click on any temp (Cels) element --> upon it the Fahr/Cels convertion happens
@@ -372,6 +385,7 @@ class View {
 
     // ================================================================================================
 
+    // handle clicking on any el in Saved Locations: either remove it or fetch and show the weather there
     handleSavedLocationsClick(handler) {
         this.savedLocationsClickCallback = handler
         document.querySelector('.added-locations').removeEventListener('click', this.savedLocationsClickHandler)
@@ -390,6 +404,7 @@ class View {
 
     // ================================================================================================
 
+    // handle closing the map
     handleClosingMap() {
         const handleClick = (e) => {
         if (!e.target.closest('.modal__close-btn') && !e.target.classList.contains('modal--maps')) return;
@@ -404,7 +419,7 @@ class View {
                 this.moveMapDiv('move out')
                 modal.remove();
                 document.removeEventListener('click', handleClick); // Remove the event listener after cleanup
-                console.log(`event listener removed`)
+                // console.log(`event listener removed`)
             }, 500);
         }
         };
@@ -414,6 +429,7 @@ class View {
 
     // ================================================================================================
 
+    // handle the click on Change Location btn
     handleChangeLocationClick(handler) {
         this.changeLocationCallback = handler
         document.querySelector('.change-location-btn').removeEventListener('click', this.changeLocationHandler)
@@ -436,8 +452,9 @@ class View {
         - Since you're binding the method in the constructor (this.formHandler = this.formHandler.bind(this)), it is not necessary to define it as an arrow function. The binding ensures that 'this' refers to the class instance, achieving the same result as an arrow function would, but with a method.
     */
 
+    // handle submitting the Search By City form
     handleSearchCitySubmit(handler) {
-        if(!document.querySelector('.modal__form')) return console.log('No form');
+        if(!document.querySelector('.modal__form')) return;
         this.formHandlerCallback = handler
         document.querySelector('.modal__form').removeEventListener('submit', this.formHandler)
         document.querySelector('.modal__form').addEventListener('submit', this.formHandler)
@@ -451,6 +468,7 @@ class View {
 
     // ================================================================================================
 
+    // handle closing the modal window
     handleModalCloseBtnClick() {
         document.addEventListener('click', this.boundCloseModal)
     }
@@ -467,7 +485,7 @@ class View {
 
     // ================================================================================================
 
-    // btns: Make Primary and Add a Location to the list
+    // handle clicking on the 'Make Primary' and 'Add a Location to the list' btns
     handleLocationBtns(handler) {
         if (this.boundTopLocationBtnsHandler) {   // removing any existing listener first because I re-render the element with these buttons frequently
             this.weatherBoxEl.removeEventListener('click', this.boundTopLocationBtnsHandler)
@@ -501,6 +519,7 @@ class View {
 
     // ================================================================================================
 
+    // handle clicking on the map btn
     handleMapBtnClick(handler) {
         this.handler = handler;  // Store the handler for later use
         this.changeLocBtnBoxEl.removeEventListener('click', this.clickHandler); // Remove any existing event listeners

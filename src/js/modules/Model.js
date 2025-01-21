@@ -9,8 +9,8 @@ import { pushToLocalStorage, pushSavedLocation, getSavedLocations, getPrimaryLoc
 
 import { getLocalTime, getLocalDay } from './model-dependencies/getLocal.js'
 import { setAllDegrees, convertTempUnits } from './model-dependencies/fahrenheitCelsius.js'
-import { formatHourly, formatDaily } from './model-dependencies/formatters.js'
-import { updateSavedLocation, makeSavedLocationFirst, removeFromSavedLocations } from './model-dependencies/savedLocations.js'
+import { formatHourly, formatDaily, formatSavedLocations } from './model-dependencies/formatters.js'
+import { updateSavedLocation, makeSavedLocationFirst, removeFromSavedLocations, updateSavedLocations } from './model-dependencies/savedLocations.js'
 import { calcSunrise, calcSunset } from './model-dependencies/calcSuntimes.js'
 import { truncateFetchArrays, defineDayTime, switchTempUnits, convertToCorrectTime } from './model-dependencies/smallFunctions.js'
 
@@ -82,84 +82,95 @@ class Model {
 
     /* ================================================================================================ */
 
+    // pushing a new saved location
     pushSavedLocation(obj, flag) {
         pushSavedLocation(obj, flag, this.savedLocations)
     }
 
     // ================================================================================================
 
+    // fetching saved locations from the LS
     getSavedLocations() {
         getSavedLocations(this.savedLocations)
     }
 
     // ================================================================================================
 
+    // fetching primary location from the LS
     getPrimaryLocation() {
         this.primaryLocation = getPrimaryLocation() || []
     }
 
     // ================================================================================================
 
-    pushWeatherFetch(value) {
-        pushWeatherFetch(value, this.previousWeatherFetches)
-    }
-
-    // ================================================================================================
-
+    // pushing timezone fetch to Model/Logic
     pushTimezoneFetch(value) {
-        pushTimezoneFetch(value, this.previousTimezoneFetches)
+        this.previousTimezoneFetches.push(value)
     }
-
-    // ================================================================================================
-
-    pushToLocalStorage(value, key) {
-        pushToLocalStorage(value, key)
-    }
-
-    // ================================================================================================
-
-    pushWeatherFetchesToLS() {
-        pushWeatherFetchesToLS(this.previousWeatherFetches)
-    }
-
-    // ================================================================================================
-
+    
+    // pushing timezone fetch to LS
     pushTimezoneFetchesToLS() {
-        pushTimezoneFetchesToLS(this.previousTimezoneFetches)
+        const timezone = JSON.stringify(this.previousTimezoneFetches)
+        pushToLocalStorage(timezone, 'timezoneFetches')
     }
 
-    // ================================================================================================
-
-    getWeatherFetchesFromLS() {
-        getWeatherFetchesFromLS(this.previousWeatherFetches)
-    }
-
-    // ================================================================================================
-
+    // fetching timezone fetches from the LS
     getTimezoneFetchesFromLS() {
-        getTimezoneFetchesFromLS(this.previousTimezoneFetches)
+        const fetch = localStorage.getItem('timezoneFetches')
+        if (fetch) this.previousTimezoneFetches = JSON.parse(fetch);
+    }
+
+    // ================================================================================================
+
+    // pushing something to LS
+    pushToLocalStorage(value, key) {
+        localStorage.setItem(key, value)
+    }
+
+    // ================================================================================================
+
+    // pushing weather fetch to Model/Logic
+    pushWeatherFetch(value) {
+        this.previousWeatherFetches.push(value)
+    }
+
+    // pushing weather fetch to LS
+    pushWeatherFetchesToLS() {
+        const weather = JSON.stringify(this.previousWeatherFetches)
+        this.pushToLocalStorage(weather, 'weatherFetches')
+    }
+
+    // fetching weather fetches from the LS
+    getWeatherFetchesFromLS() {
+        const fetch = localStorage.getItem('weatherFetches')
+        if (fetch) this.previousWeatherFetches = JSON.parse(fetch);
     }
     
     // ================================================================================================
     
+    // fetching coords fetches from the LS
     getCoordsFetchesFromLS() {
-        getCoordsFetchesFromLS(this.fetchedCoords)
+        const fetch = localStorage.getItem('userCoords')
+        if (fetch) this.fetchedCoords = JSON.parse(fetch);
     }
-    
-    // ================================================================================================
 
-    pushPrimaryLocation([lat,lng]) {
-        pushPrimaryLocation([lat,lng], this.primaryLocation)
-    }
-    
-    // ================================================================================================
-    
+    // pushing coords to Model
     pushFetchedCoords(value) {
-        pushFetchedCoords(value, this.fetchedCoords)
+        this.fetchedCoords.push(value)
+    }
+    
+    // ================================================================================================
+
+    // pushing primary location
+    pushPrimaryLocation([lat,lng]) {
+        this.primaryLocation = [];
+        this.primaryLocation.push(lat, lng);
+        pushToLocalStorage(JSON.stringify(this.primaryLocation), 'primaryLocation');
     }
 
     // ================================================================================================
 
+    // getting the short weather description -- used in the document.title
     giveShortDescription(weathercode) {
         return giveShortDescription(weathercode)
     }
@@ -173,6 +184,7 @@ class Model {
 
     // ================================================================================================
 
+    // getting local time at location
     getLocalTime(offsetInSec) {   // returns an array: current hour and minutes (as numbers)
         const data = getLocalTime(offsetInSec, this.timeOfTheDay, this.defineDayTime)
         return data
@@ -180,12 +192,14 @@ class Model {
 
     // ================================================================================================
 
+    // getting local date at location
     getLocalDay(offsetInSec) {
         return getLocalDay(offsetInSec)
     }
 
     // ================================================================================================
 
+    // getting weather description (long) by weathercode
     getWeatherDescription(weathercode) {
         return myObject[String(weathercode)]  // I import it above
     }
@@ -199,42 +213,55 @@ class Model {
 
 
 
-    
+    // updating saved location    
     updateSavedLocation(objOfData) {
         updateSavedLocation(objOfData, this.savedLocations)
     }
 
     // ================================================================================================
 
+    // making a saved location first (primary)
     makeSavedLocationFirst(coords) {
         makeSavedLocationFirst(coords, this.savedLocations)
     }
 
     // ================================================================================================
 
+    // removing from saved locations
     removeFromSavedLocations(latStr, lngStr) {
         removeFromSavedLocations(latStr, lngStr, this.savedLocations)
     }
 
     // ================================================================================================
 
+    // dependencies of 'truncateFetchArrays'
+    fetchedCoordsGetter = () => this.fetchedCoords;
+    fetchedWeathersGetter = () => this.previousWeatherFetches;
+    fetchedTimezonesGetter = () => this.previousTimezoneFetches;
+    fetchedCoordsSetter = (value) => this.fetchedCoords = value;
+    fetchedWeathersSetter = (value) => this.previousWeatherFetches = value;
+    fetchedTimezonesSetter = (value) => this.previousTimezoneFetches = value;
+    
     // checks if the arrays that have recent fetches do not grow to be more than length 20: 
     // if they more than length 20, i slice them and make them length 20 (the last 20 pushed items, older ones sliced out) else they occupy too much space in LS and grow out of hand
     truncateFetchArrays() {
-        truncateFetchArrays(this.fetchedCoords, this.previousWeatherFetches, this.previousTimezoneFetches)
+        truncateFetchArrays(this.fetchedCoordsGetter, this.fetchedWeathersGetter, this.fetchedTimezonesGetter, this.fetchedCoordsSetter, this.fetchedWeathersSetter, this.fetchedTimezonesSetter)
     }
 
     // ================================================================================================
 
+    // dependencies of 'switchTempUnits'
     setTempUnits = (value) => this.tempUnits = value
     getTempUnits = () => this.tempUnits
 
+    // switching temp units: C/F or F/C
     switchTempUnits() {
         return switchTempUnits(this.getTempUnits, this.setTempUnits)
     }
 
     // ================================================================================================
 
+    // getting the local time at location?...
     convertToCorrectTime(dateTimeStr) {     // returns "HH:mm"
         const data = convertToCorrectTime(dateTimeStr, this.offsetInSeconds)
         return data
@@ -242,43 +269,50 @@ class Model {
 
     // ================================================================================================
 
+    // setting sunrise time
     setSunriseTime(value) {
         this.sunriseTime = this.convertToCorrectTime(value)
     }
 
     // ================================================================================================
     
+    // setting sunset time
     setSunsetTime(value) {
         this.sunsetTime = this.convertToCorrectTime(value)
     }
 
     // ================================================================================================
 
+    // getting a formatted string
     getTodayString() {
         return `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()).toString().padStart(2,0)}`
     }
 
     // ================================================================================================
 
+    // getting a formatted string
     getTomorrowString() {
         return `${new Date().getFullYear()}-${(new Date().getMonth()+1).toString().padStart(2,0)}-${(new Date().getDate()+1).toString().padStart(2,0)}`
     }
 
     // ================================================================================================
 
+    // getting a formatted string
     getNowTime() {
         return `${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,0)}`
     }
 
     // ================================================================================================
 
-    async fetchWeather(coordsArr) {
-        const dataObj = await fetchWeather(coordsArr)
+    // fetching weather by coords
+    async fetchWeather(coordsArr, type) {
+        const dataObj = await fetchWeather(coordsArr, type)
         return dataObj
     }
 
     // ================================================================================================
 
+    // fetching timezone by coords
     async fetchTimezone(coordsArr) {
         const dataObj = await fetchTimezone(coordsArr)
         return dataObj
@@ -286,6 +320,7 @@ class Model {
 
     // ================================================================================================
 
+    // fetching weather by city name
     async fetchWeatherByCityName(cityName) {
         const data = await fetchWeatherByCityName(cityName)
         return data
@@ -293,30 +328,35 @@ class Model {
 
     // ================================================================================================
 
+    // calculating when is sunrise
     calcSunrise(time) {
         return calcSunrise(time)
     }
 
     // ================================================================================================
 
+    // calculating when is sunset
     calcSunset(nowTimeString, sunsetTimeString) {
         return calcSunset(nowTimeString, sunsetTimeString)
     }
 
     // ================================================================================================
 
+    // getting the description of the wind direction by degrees
     getWindDirection(degrees) {
         return getWindDirection(degrees)
     }
 
     // ================================================================================================
 
+    // getting the time of the day
     defineDayTime(nowHours) {
         return defineDayTime(nowHours)
     }
 
     // ================================================================================================
 
+    // getting the path to the big weather icon
     defineBigIcon(weathercode, dayTime) {
         const path = defineBigIcon(weathercode, dayTime)  // I import it above
         return path 
@@ -338,15 +378,31 @@ class Model {
 
     // ================================================================================================
 
+    // formatting for Saved Locations
+    formatSavedLocations(arr) {
+        if(arr.length===0 || !arr) return;
+        return formatSavedLocations(arr)
+    }
+
+    // ================================================================================================
+
+    // converting temp: C/F or F/C
     convertTempUnits(value, flag) {
         convertTempUnits(value, flag)
     }
 
     // ================================================================================================
 
-    // get all current temps on the screen as an array, in Fahr and Cels
+    // getting all current temps on the screen as an array, in Fahr and Cels
     setAllDegrees(fetchedWeather) {
         setAllDegrees(fetchedWeather, this.degrees, this.degreesFahrenheit)
+    }
+
+    // ================================================================================================
+
+    // updating Saved Locations
+    updateSavedLocations(arr) {
+        updateSavedLocations(arr, this.savedLocations)
     }
 
 }
