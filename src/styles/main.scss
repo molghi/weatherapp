@@ -1,5 +1,3 @@
-
-
 @use './initial'; // styles reset and general things for the proj
 @use './weather'; // styles for .weather
 @use './titleBox'; // styles for .title-box
@@ -9,3 +7,4 @@
 @use './modal';
 @use './buttonBox';
 @use './videoBox';
+@use './bgImage';

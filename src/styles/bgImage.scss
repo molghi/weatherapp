@@ -1,0 +1,87 @@
+.bg-img {
+    //   width: 100%;
+    //   height: 100vh;
+}
+
+.img-box {
+    //   height: 100%;
+    transition: all 1s;
+}
+
+.img {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    object-fit: cover;
+    transition: all 1s;
+    filter: brightness(0);
+    //   user-drag: none; // image cannot be dragged around
+}
+
+// ==============================================================
+
+// the moving "magic":
+.move {
+    filter: blur(1px) brightness(30%);
+    transform: scale(1.2);
+    animation-name: moveIt;
+    animation-duration: 30s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes moveIt {
+    0% {
+        transform: scale(1.2) translateX(-8vw);
+    }
+    100% {
+        transform: scale(1.2) translateX(8vw);
+    }
+}
+
+// for an aspect ratio 16:9 (1920x1080) moving the image by 8vw on the X axis seems to be a comfortable displacement
+
+// ==============================================================
+
+.fadeIn {
+    animation-name: fadeIn;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+.fadeOut {
+    animation-name: fadeOut;
+    animation-duration: 0.4s;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fadeIn {
+    0% {
+        filter: brightness(0);
+    }
+    100% {
+        filter: brightness(100%) blur(1px);
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        filter: brightness(100%);
+    }
+    100% {
+        filter: brightness(0);
+    }
+}
+
+// ================================================================================================
+
+.dark {
+    filter: brightness(0);
+}
